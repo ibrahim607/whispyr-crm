@@ -19,7 +19,5 @@ async function createServerSupabaseClient() {
 }
 
 
-//ask about it, this is wrong
-
-
+//ask about this
 export default createServerSupabaseClient;
