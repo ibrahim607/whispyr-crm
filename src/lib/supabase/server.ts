@@ -9,7 +9,12 @@ async function createServerSupabaseClient() {
                 return cookieStore.getAll()
             },
             setAll(cookiesToSet) {
-                cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+                try {
+                    cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+                } catch {
+                    // Next.js strictly forbids setting cookies inside Server Components.
+                    // This try/catch suppresses the error while allowing Route Handlers to still work.
+                }
             }
         }
     })
