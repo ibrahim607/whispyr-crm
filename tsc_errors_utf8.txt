@@ -1,3 +1,0 @@
-﻿src/components/create-lead-dialog.tsx(31,75): error TS2353: Object literal may only specify known properties, and 'stage' does not exist in type '{ name: string; phone: string; email: string; note?: string | undefined; }'.
-src/components/sidebar.tsx(7,36): error TS2307: Cannot find module '@/generated/prisma' or its corresponding type declarations.
-

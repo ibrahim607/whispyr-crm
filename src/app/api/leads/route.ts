@@ -1,49 +1,67 @@
-import { LeadService, LeadSchema } from "@/modules/leads";
-import { authenticateUser, autheticationError } from "@/utils/autheticateUser";
+import { Role } from "@/generated/prisma/enums";
+import { createLeadSchema, listLeadsQuerySchema } from "@/modules/leads/schema";
+import {
+    createLead,
+    LeadServiceError,
+    listLeads,
+} from "@/modules/leads/service";
+import {
+    authenticateUser,
+    AuthenticationError,
+} from "@/utils/autheticateUser";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { Role } from "@/generated/prisma/enums";
 
+// GET /api/leads?page=1&pageSize=10
 export async function GET(request: NextRequest) {
     try {
+        // Authenticate user
+        const profile = await authenticateUser();
+
+        // Get query params
         const searchParams = request.nextUrl.searchParams;
         const page = searchParams.get("page");
         const pageSize = searchParams.get("pageSize");
-        const params = LeadSchema.list.parse({
+
+        // Validate query params
+        const params = listLeadsQuerySchema.parse({
             page,
             pageSize,
         });
-        const profile = await authenticateUser();
-        const result = await LeadService.list(profile, params);
 
-        return NextResponse.json({
-            success: true,
-            data: {
-                leads: result.leads,
-                pagination: result.pagination,
-            },
-            message: "Leads fetched successfully",
-        })
+        // Get leads
+        const leads = await listLeads(profile, params);
+
+        // Return response
+        return NextResponse.json({ success: true, data: leads });
     } catch (error) {
-        if (error instanceof autheticationError) {
+        if (error instanceof AuthenticationError) {
             return NextResponse.json(
-                {
-                    error: error.message,
-                },
-                {
-                    status: error.code
-                }
-            )
+                { error: error.message },
+                { status: error.statusCode },
+            );
         }
 
-        if (error instanceof ZodError)
-            return NextResponse.json({
-                error: error.flatten().fieldErrors,
-            },
+        if (error instanceof LeadServiceError) {
+            return NextResponse.json(
+                { error: error.message },
+                { status: error.statusCode },
+            );
+        }
+
+        if (error instanceof ZodError) {
+            return NextResponse.json(
                 {
-                    status: 400
-                }
-            )
+                    error: error.flatten().fieldErrors,
+                },
+                { status: 400 },
+            );
+        }
+
+        return NextResponse.json(
+            { error: "Internal server error" },
+            { status: 500 },
+        );
     }
 }
 
@@ -54,20 +72,24 @@ export async function POST(request: NextRequest) {
 
         // Get request body
         const body = await request.json();
-        const data = LeadSchema.create.parse(body);
+        const data = createLeadSchema.parse(body);
 
         // Create lead
-        const lead = await LeadService.create(profile, data);
+        const lead = await createLead(profile, data);
 
-        return NextResponse.json({
-            success: true,
-            data: lead,
-        });
+        return NextResponse.json({ success: true, data: lead });
     } catch (error) {
-        if (error instanceof autheticationError) {
+        if (error instanceof AuthenticationError) {
             return NextResponse.json(
                 { error: error.message },
-                { status: error.code },
+                { status: error.statusCode },
+            );
+        }
+
+        if (error instanceof LeadServiceError) {
+            return NextResponse.json(
+                { error: error.message },
+                { status: error.statusCode },
             );
         }
 

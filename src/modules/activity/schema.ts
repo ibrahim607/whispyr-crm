@@ -16,42 +16,29 @@ const createActivitySchema = z
       })
       .optional(),
   })
-  .superRefine((data, ctx) => {
+  .superRefine((data) => {
     if (
       ["STATUS_CHANGE", "STAGE_CHANGE", "ASSIGNMENT_CHANGE"].includes(data.type)
     ) {
       if (!data.meta) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Meta is required for change activities",
-          path: ["meta"],
-        });
-        return;
+        throw new Error("Meta is required for status change");
       }
 
-      try {
-        switch (data.type) {
-          case ActivityType.STATUS_CHANGE:
-            leadStatusSchema.parse(data.meta.from);
-            leadStatusSchema.parse(data.meta.to);
-            break;
-          case ActivityType.STAGE_CHANGE:
-            leadStageSchema.parse(data.meta.from);
-            leadStageSchema.parse(data.meta.to);
-            break;
-          case ActivityType.ASSIGNMENT_CHANGE:
-            z.string().parse(data.meta.from); // agent name
-            z.string().parse(data.meta.to); // agent name
-            break;
-          default:
-            break;
-        }
-      } catch (e) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Invalid meta data for activity type",
-          path: ["meta"],
-        });
+      switch (data.type) {
+        case ActivityType.STATUS_CHANGE:
+          data.meta.from = leadStatusSchema.parse(data.meta.from);
+          data.meta.to = leadStatusSchema.parse(data.meta.to);
+          break;
+        case ActivityType.STAGE_CHANGE:
+          data.meta.from = leadStageSchema.parse(data.meta.from);
+          data.meta.to = leadStageSchema.parse(data.meta.to);
+          break;
+        case ActivityType.ASSIGNMENT_CHANGE:
+          data.meta.from = z.string().parse(data.meta.from); // agent name
+          data.meta.to = z.string().parse(data.meta.to); // agent name
+          break;
+        default:
+          break;
       }
     }
   });

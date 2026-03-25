@@ -1,19 +1,21 @@
 export interface PaginationMeta {
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+    page: number;
+    pageSize: number;
+    total: number;
+    pages: number;
+    hasMore: boolean;
 }
 
 export function buildPagination(
-  total: number,
-  page: number,
-  pageSize: number,
+    total: number,
+    page: number,
+    pageSize: number,
 ): PaginationMeta {
-  return {
-    total,
-    page,
-    pageSize,
-    totalPages: Math.ceil(total / pageSize),
-  };
+    return {
+        page,
+        pageSize,
+        total,
+        pages: Math.ceil(total / pageSize),
+        hasMore: page * pageSize < total,
+    };
 }

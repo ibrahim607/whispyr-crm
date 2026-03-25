@@ -1,32 +1,48 @@
-import { LeadService, LeadSchema } from "@/modules/leads";
-import { authenticateUser, autheticationError } from "@/utils/autheticateUser";
+import { editLeadSchema, leadIdParamsSchema } from "@/modules/leads/schema";
+import { getLead, LeadServiceError, updateLead } from "@/modules/leads/service";
+import {
+    authenticateUser,
+    AuthenticationError,
+} from "@/utils/autheticateUser";
+import { handleRouteError } from "@/utils/handleRouteErrors";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { Role } from "@/generated/prisma/enums";
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+) {
     try {
-        const { id } = await params;
-        const profile = await authenticateUser([Role.ADMIN, Role.MANAGER, Role.AGENT]);
+        const profile = await authenticateUser();
+        const { id } = leadIdParamsSchema.parse(await params);
+        const lead = await getLead(profile, id);
 
-        const body = await request.json();
-        const data = LeadSchema.update.partial().parse(body);
-
-        const result = await LeadService.update(profile, id, data);
-
-        return NextResponse.json({
-            success: true,
-            data: result.lead,
-            activities: result.activities,
-            message: "Lead updated successfully",
-        });
+        return NextResponse.json({ success: true, data: lead });
     } catch (error) {
-        console.error("PATCH /api/leads/[id] Error:", error);
-        
-        if (error instanceof autheticationError) {
+        return handleRouteError(error);
+    }
+}
+
+export async function PATCH(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+) {
+    try {
+        const profile = await authenticateUser();
+        const { id } = leadIdParamsSchema.parse(await params);
+        const body = await request.json();
+        const data = editLeadSchema.parse(body);
+        const lead = await updateLead(profile, id, data);
+
+        return NextResponse.json({ success: true, data: lead });
+    } catch (error) {
+        if (
+            error instanceof AuthenticationError ||
+            error instanceof LeadServiceError
+        ) {
             return NextResponse.json(
                 { error: error.message },
-                { status: error.code },
+                { status: error.statusCode },
             );
         }
 

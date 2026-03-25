@@ -1,118 +1,155 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
+import { type FormEvent, useState } from "react";
+import { Plus } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { LeadStage, LeadStatus } from "@/generated/prisma/enums"
-import { useCreateLead } from "@/lib/tanstack/useLeads"
-import { useState } from "react"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useCreateLead } from "@/lib/tanstack/useLeads";
+import { getApiErrorMessage } from "@/lib/get-api-error-message";
+
+function getTextAreaClassName() {
+  return "min-h-28 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50";
+}
 
 export function CreateLeadDialog() {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [note, setNote] = useState("");
+  const [error, setError] = useState("");
 
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [stage, setStage] = useState<LeadStage>(LeadStage.NEW)
-  const [status, setStatus] = useState(LeadStatus.OPEN)
-  const [note, setNote] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const createLead = useCreateLead();
 
-  const { mutateAsync: createLead } = useCreateLead({ name, email, phone, note });
+  function resetForm() {
+    setName("");
+    setEmail("");
+    setPhone("");
+    setNote("");
+    setError("");
+  }
 
-  const handleSave = async () => {
-    setError(null)
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+
     try {
-      await createLead()
-    } catch (err: any) {
-      const serverError = err?.response?.data?.error;
-      if (typeof serverError === "object" && serverError !== null) {
-        // Collect all Zod error messages
-        const messages = Object.values(serverError).flat().join(", ");
-        setError(messages || "Validation error");
-      } else {
-        setError(serverError || err.message || "Failed to create lead");
-      }
+      await createLead.mutateAsync({
+        name,
+        email,
+        phone,
+        note: note || undefined,
+      });
+
+      resetForm();
+      setOpen(false);
+    } catch (mutationError) {
+      setError(getApiErrorMessage(mutationError, "Failed to create lead"));
+    }
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+
+    if (!nextOpen) {
+      resetForm();
     }
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="lg" className="p-4 bg-blue-600">
-          + Create lead
+        <Button className="h-10 rounded-xl px-4 shadow-sm bg-blue-600 hover:bg-blue-700 cursor-pointer">
+          <Plus className="size-4" />
+          Create Lead
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] overflow-y-auto max-h-screen">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create Lead</DialogTitle>
+          <DialogTitle>Create New Lead</DialogTitle>
           <DialogDescription>
-            Add a new lead to your CRM.
+            Add a new lead with the basic details from the homework brief.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <Field>
-            <FieldLabel>Full Name</FieldLabel>
-            <FieldContent>
-              <Input placeholder="John Doe" value={name} onChange={e => setName(e.target.value)} />
-            </FieldContent>
-          </Field>
-          <Field>
-            <FieldLabel>Email</FieldLabel>
-            <FieldContent>
-              <Input type="email" placeholder="john@example.com" value={email} onChange={e => setEmail(e.target.value)} />
-            </FieldContent>
-          </Field>
-          <Field>
-            <FieldLabel>Phone</FieldLabel>
-            <FieldContent>
-              <Input type="tel" placeholder="123-456-7890" value={phone} onChange={e => setPhone(e.target.value)} />
-            </FieldContent>
-          </Field>
-          <Field>
-            <FieldLabel>Stage</FieldLabel>
-            <FieldContent>
-              <Select defaultValue="NEW" onValueChange={(val) => setStage(val as LeadStage)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a stage" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NEW">New</SelectItem>
-                  <SelectItem value="CONTACTED">Contacted</SelectItem>
-                  <SelectItem value="QUALIFIED">Qualified</SelectItem>
-                  <SelectItem value="NEGOTIATING">Negotiating</SelectItem>
-                </SelectContent>
-              </Select>
-            </FieldContent>
-          </Field>
-          <Field>
-            <FieldLabel>Notes</FieldLabel>
-            <FieldContent>
-              <Textarea placeholder="Add notes or background context about the lead..." className="resize-none h-24" value={note} onChange={e => setNote(e.target.value)} />
-            </FieldContent>
-          </Field>
-        </div>
-        {error && (
-          <div className="text-sm font-medium text-destructive mt-2">
-            {error}
+
+        <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
+          <div className="space-y-2">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="John Smith"
+              disabled={createLead.isPending}
+              required
+            />
           </div>
-        )}
-        <div className="flex justify-end mt-4">
-          <DialogClose asChild>
-            <Button type="submit" className="bg-blue-600" onClick={handleSave}>Save lead</Button>
-          </DialogClose>
-        </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="john@example.com"
+              disabled={createLead.isPending}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone</Label>
+            <Input
+              id="phone"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              placeholder="+1 555-0123"
+              disabled={createLead.isPending}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="note">Note</Label>
+            <textarea
+              id="note"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Optional note about this lead..."
+              disabled={createLead.isPending}
+              className={getTextAreaClassName()}
+            />
+          </div>
+
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+          <DialogFooter className="px-0 py-0 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={createLead.isPending}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createLead.isPending}>
+              {createLead.isPending ? "Creating..." : "Create Lead"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -10,4 +10,4 @@ export const ActivitySchema = {
   getByLeadId: getLeadActivitiesSchema,
 } as const;
 
-export type { CreateActivityRequest, ListLeadActivitiesResponseData, GetLeadActivitiesRequest } from "./schema";
+export type { CreateActivityRequest } from "./schema";

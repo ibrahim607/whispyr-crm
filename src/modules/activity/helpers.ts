@@ -4,14 +4,16 @@ export function buildActivityContent(
   activityType: ActivityType,
   meta:
     | {
-        from: unknown;
-        to: unknown;
-      }
+      from: unknown;
+      to: unknown;
+    }
     | undefined,
 ) {
   if (!meta) {
     return null;
   }
+
+  console.log(meta);
 
   switch (activityType) {
     case ActivityType.STATUS_CHANGE:

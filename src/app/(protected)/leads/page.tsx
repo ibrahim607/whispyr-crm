@@ -17,6 +17,10 @@ export default function LeadsPage() {
         pageSize,
     });
 
+    const totalPages = data?.pagination?.pages;
+    const currentPage = data?.pagination?.page;
+    const totalLeads = data?.pagination?.total;
+
     if (isLoading) {
         return <div className='flex items-center justify-center w-full h-full'><Spinner /></div>
     }
@@ -85,29 +89,31 @@ export default function LeadsPage() {
                     </Table>
                 </div>
 
-                <div className='flex justify-between bg-white w-full border-t p-4 py-5 text-gray-500 items-center mt-auto shrink-0'>
-                    <div>Showing {data?.total > 0 ? (data.page - 1) * data.pageSize + 1 : 0} - {Math.min(data?.page * data?.pageSize, data?.total)} of {data?.total} leads</div>
-                    <div className="space-x-4">
-                        <Button
-                            variant="outline"
-                            size="lg"
-                            className=''
-                            onClick={() => setPage(page - 1)}
-                            disabled={page === 1}
-                        >
-                            <p className='text-xs text-gray-600 font-semibold font-sans'>Previous</p>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="lg"
-                            className='bg-blue-600 hover:bg-blue-700'
-                            onClick={() => setPage(page + 1)}
-                            disabled={page >= data?.totalPages}
-                        >
-                            <p className='p-1 py-5 text-xs text-white font-semibold font-sans'>Next</p>
-                        </Button>
+                {data && (
+                    <div className='flex justify-between bg-white w-full border-t p-4 py-5 text-gray-500 items-center mt-auto shrink-0'>
+                        <div>Showing {data.pagination.page} of {data.pagination.pages} - {data.pagination.total} leads</div>
+                        <div className="space-x-4">
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                className=''
+                                onClick={() => setPage(page - 1)}
+                                disabled={page === 1}
+                            >
+                                <p className='text-xs text-gray-600 font-semibold font-sans cursor-pointer'>Previous</p>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                className='bg-blue-600 hover:bg-blue-700'
+                                onClick={() => setPage(page + 1)}
+                                disabled={page >= data.pagination.pages}
+                            >
+                                <p className='p-1 py-5 text-xs text-white font-semibold font-sans cursor-pointer'>Next</p>
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div >
     )

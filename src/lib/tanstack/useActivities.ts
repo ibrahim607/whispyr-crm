@@ -1,7 +1,7 @@
 import {
   GetLeadActivitiesRequest,
   ListLeadActivitiesResponseData,
-} from "@/modules/activity";
+} from "@/modules/activity/schema";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/api";
 

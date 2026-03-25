@@ -1,55 +1,80 @@
-import { Prisma, Profile } from "@/generated/prisma/client";
-import { CreateLeadRequest, EditLeadRequest, ListLeadsParams } from "./schema";
 import { prisma } from "@/lib/prisma";
+import {
+  CreateLeadRequest,
+  EditLeadRequest,
+  LeadAssigneeSummary,
+  LeadDetail,
+  ListLeadsParams,
+  ListLeadsResponseData,
+} from "./schema";
+import { Prisma, Profile, Role } from "@/generated/prisma/client";
+import { buildPagination } from "@/utils/pagination";
+
+const assigneeSelect = {
+  id: true,
+  name: true,
+  email: true,
+} satisfies Prisma.ProfileSelect;
+
+const leadSummarySelect = {
+  id: true,
+  name: true,
+  phone: true,
+  email: true,
+  stage: true,
+  status: true,
+  createdAt: true,
+  assignedToId: true,
+  assignedTo: {
+    select: assigneeSelect,
+  },
+} satisfies Prisma.LeadSelect;
+
+const leadDetailSelect = {
+  ...leadSummarySelect,
+  updatedAt: true,
+} satisfies Prisma.LeadSelect;
 
 export async function dbListLeads(
   where: Prisma.LeadWhereInput,
   params: ListLeadsParams,
-) {
+): Promise<ListLeadsResponseData> {
   const [leads, total] = await Promise.all([
     prisma.lead.findMany({
       where,
+      select: leadSummarySelect,
       take: params.pageSize,
       skip: (params.page - 1) * params.pageSize,
       orderBy: {
         createdAt: "desc",
       },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        email: true,
-        stage: true,
-        status: true,
-        createdAt: true,
-        assignedToId: true,
-        assignedTo: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
     }),
     prisma.lead.count({ where }),
   ]);
 
-  return { leads, total };
+  return {
+    leads,
+    pagination: buildPagination(total, params.page, params.pageSize),
+  };
 }
 
-export async function dbGetLeadById(id: string) {
+export async function dbGetLeadById(id: string): Promise<LeadDetail | null> {
   return prisma.lead.findUnique({
     where: { id },
-    include: {
-      assignedTo: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
+    select: leadDetailSelect,
+  });
+}
+
+export async function dbFindAssignableAgentById(
+  id: string,
+): Promise<LeadAssigneeSummary | null> {
+  return prisma.profile.findFirst({
+    where: {
+      id,
+      role: Role.AGENT,
+      isActive: true,
     },
+    select: assigneeSelect,
   });
 }
 
@@ -59,13 +84,15 @@ export async function dbCreateLead(
   tx?: Prisma.TransactionClient,
 ) {
   const client = tx ?? prisma;
-  return client.lead.create({
+  const lead = await client.lead.create({
     data: {
       name: data.name,
       phone: data.phone,
       email: data.email,
     },
   });
+
+  return lead;
 }
 
 export async function dbUpdateLead(
@@ -74,8 +101,11 @@ export async function dbUpdateLead(
   tx?: Prisma.TransactionClient,
 ) {
   const client = tx ?? prisma;
-  return client.lead.update({
+  const updatedLead = await client.lead.update({
     where: { id },
     data,
+    select: leadDetailSelect,
   });
+
+  return updatedLead;
 }

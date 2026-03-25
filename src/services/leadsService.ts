@@ -1,19 +1,30 @@
-import { CreateLeadRequest, EditLeadRequest, ListLeadsParams } from "@/modules/leads";
 import { api } from "@/utils/api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+    CreateLeadRequest,
+    EditLeadRequest,
+    LeadDetail,
+    ListLeadsParams,
+    ListLeadsResponseData,
+} from "@/modules/leads/schema";
 
-export const leadsService = {
-    listLeads: async (params?: ListLeadsParams) => {
+export const leadService = {
+    async getLeads(params: ListLeadsParams): Promise<ListLeadsResponseData> {
         const { data } = await api.get("/leads", { params });
         return data.data;
     },
-    createLead: async (params: CreateLeadRequest) => {
-        const { data } = await api.post("/leads", params);
+
+    async getLeadById(id: string): Promise<LeadDetail> {
+        const { data } = await api.get(`/leads/${id}`);
         return data.data;
     },
-    updateLead: async ({ id, data }: { id: string, data: EditLeadRequest }) => {
-        const res = await api.patch(`/leads/${id}`, data);
-        return res.data.data;
-    }
 
-}
+    async createLead(lead: CreateLeadRequest): Promise<LeadDetail> {
+        const { data } = await api.post("/leads", lead);
+        return data.data;
+    },
+
+    async editLead(id: string, payload: EditLeadRequest): Promise<LeadDetail> {
+        const { data } = await api.patch(`/leads/${id}`, payload);
+        return data.data;
+    },
+};

@@ -1,5 +1,5 @@
 import { Role } from "@/generated/prisma/client";
-import { EditLeadRequest } from "./schema";
+import { EditLeadRequest } from "@/modules/leads/schema";
 
 const contactFields = ["name", "email", "phone"] as const;
 

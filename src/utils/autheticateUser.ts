@@ -2,10 +2,10 @@ import { Role } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import createServerSupabaseClient from "@/lib/supabase/server";
 
-export class autheticationError extends Error {
+export class AuthenticationError extends Error {
     constructor(
         public message: string,
-        public code: number
+        public statusCode: number
     ) {
         super(message);
         this.name = "autheticationError";
@@ -18,7 +18,7 @@ export async function authenticateUser(allowedRoles?: Role[]) {
     const { data: { user }, } = await supabase.auth.getUser();
 
     if (!user) {
-        throw new autheticationError("Unauthorized", 401);
+        throw new AuthenticationError("Unauthorized", 401);
     }
 
     const profile = await prisma.profile.findUnique({
@@ -28,15 +28,15 @@ export async function authenticateUser(allowedRoles?: Role[]) {
     })
 
     if (!profile) {
-        throw new autheticationError("User not found", 404);
+        throw new AuthenticationError("User not found", 404);
     }
 
     if (!profile.isActive) {
-        throw new autheticationError("User is not active", 403);
+        throw new AuthenticationError("User is not active", 403);
     }
 
     if (allowedRoles && !allowedRoles.includes(profile.role)) {
-        throw new autheticationError("Unauthorized", 403);
+        throw new AuthenticationError("Unauthorized", 403);
     }
 
     return profile;

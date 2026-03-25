@@ -12,7 +12,7 @@ export type ListLeadsParams = z.infer<typeof listLeadsQuerySchema>;
 export const createLeadSchema = z.object({
   name: z.string().min(1),
   phone: z.string().min(8).max(15),
-  email: z.string().email(),
+  email: z.email(),
   note: z.string().optional(),
 });
 
@@ -27,7 +27,7 @@ export type LeadIdParams = z.infer<typeof leadIdParamsSchema>;
 export const editLeadSchema = z.object({
   name: z.string().min(1).optional(),
   phone: z.string().min(8).max(15).optional(),
-  email: z.string().email().optional(),
+  email: z.email().optional(),
   stage: z.nativeEnum(LeadStage).optional(),
   status: z.nativeEnum(LeadStatus).optional(),
   assignedToId: z.string().uuid().optional(),

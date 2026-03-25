@@ -2,14 +2,14 @@
 
 import React, { useState } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import { useUpdateLead } from '@/lib/tanstack/useLeads';
+import { useEditLead } from '@/lib/tanstack/useLeads';
 import { LeadStage, LeadStatus } from '@/generated/prisma/enums';
 
 export default function StatusStage({ leadId, status, stage }: { leadId: string, status: string, stage: string }) {
 
     const [currentStatus, setCurrentStatus] = useState(status)
     const [currentStage, setCurrentStage] = useState(stage)
-    const { mutateAsync: updateLead } = useUpdateLead();
+    const { mutateAsync: updateLead } = useEditLead(leadId);
 
     const getStatusColor = (s: string) => {
         switch (s) {
@@ -41,12 +41,12 @@ export default function StatusStage({ leadId, status, stage }: { leadId: string,
 
     const handleStatusChange = async (val: string) => {
         setCurrentStatus(val);
-        await updateLead({ id: leadId, data: { status: val as LeadStatus } });
+        await updateLead({ status: val as LeadStatus });
     }
 
     const handleStageChange = async (val: string) => {
         setCurrentStage(val);
-        await updateLead({ id: leadId, data: { stage: val as LeadStage } });
+        await updateLead({ stage: val as LeadStage });
     }
 
     return (

@@ -5,7 +5,6 @@ import { buildLeadChangeActivities } from "./helpers";
 import { canEditLeadContactFields } from "./permissions";
 import { ActivityService } from "../activity";
 import { prisma } from "@/lib/prisma";
-import { buildPagination } from "@/utils/pagination";
 
 export class LeadServiceError extends Error {
   constructor(
@@ -24,12 +23,7 @@ export async function listLeads(profile: Profile, params: ListLeadsParams) {
     where.assignedToId = profile.id;
   }
 
-  const { leads, total } = await dbListLeads(where, params);
-
-  return {
-    leads,
-    pagination: buildPagination(total, params.page, params.pageSize),
-  };
+  return dbListLeads(where, params);
 }
 
 export async function createLead(profile: Profile, data: CreateLeadRequest) {
