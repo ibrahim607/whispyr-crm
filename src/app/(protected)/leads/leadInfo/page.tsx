@@ -7,7 +7,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Spinner } from '@/components/ui/spinner'
 import StatusStage from '@/components/leads/StatusStage'
 import AccountAvatarSection from '@/components/leads/accountAvatarSection'
-import { SidebarFooter } from '@/components/ui/sidebar'
 
 function LeadInfoContent() {
     const searchParams = useSearchParams()

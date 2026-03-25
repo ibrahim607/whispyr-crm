@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LayoutDashboard, Users, Bell, LogOut } from "lucide-react"
 
-import type { profile, Role } from "@/generated/prisma"
+import type { Profile, Role } from "@/generated/prisma/client"
 import {
     Sidebar as SidebarUI,
     SidebarContent,
@@ -38,7 +38,7 @@ const navItems = [
 
 interface AppSidebarProps {
     role: Role
-    user: profile
+    user: Profile
 }
 
 export function Sidebar({ role, user }: AppSidebarProps) {

@@ -85,7 +85,6 @@ model Activity {
 
 enum ActivityType {
   LEAD_CREATED
-  LEAD_UPDATED
   NOTE
   CALL_ATTEMPT
   STATUS_CHANGE

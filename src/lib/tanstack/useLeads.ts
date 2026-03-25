@@ -1,5 +1,5 @@
 import { Profile } from "@/generated/prisma/client";
-import { LeadRequest, ListLeadsParams } from "@/modules/leads/schema";
+import { CreateLeadRequest, ListLeadsParams, EditLeadRequest } from "@/modules/leads";
 import { leadsService } from "@/services/leadsService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -10,7 +10,7 @@ export function useGetLeads(params?: ListLeadsParams) {
     })
 }
 
-export function useCreateLead(params: LeadRequest) {
+export function useCreateLead(params: CreateLeadRequest) {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: () => leadsService.createLead(params),
@@ -23,7 +23,7 @@ export function useCreateLead(params: LeadRequest) {
 export function useUpdateLead() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, data }: { id: string, data: Partial<LeadRequest> }) => leadsService.updateLead({ id, data }),
+        mutationFn: ({ id, data }: { id: string, data: EditLeadRequest }) => leadsService.updateLead({ id, data }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["leads"] });
         }

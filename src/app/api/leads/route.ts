@@ -1,31 +1,26 @@
-import { listLeads } from "@/modules/leads/service";
+import { LeadService, LeadSchema } from "@/modules/leads";
 import { authenticateUser, autheticationError } from "@/utils/autheticateUser";
 import { NextRequest, NextResponse } from "next/server";
-import { leadsSchema, listLeadsQuerySchema } from "@/modules/leads/schema";
 import { ZodError } from "zod";
 import { Role } from "@/generated/prisma/enums";
-import { createLead } from "@/modules/leads/db";
 
 export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;
         const page = searchParams.get("page");
         const pageSize = searchParams.get("pageSize");
-        const params = listLeadsQuerySchema.parse({
+        const params = LeadSchema.list.parse({
             page,
             pageSize,
         });
         const profile = await authenticateUser();
-        const leads = await listLeads(profile, params);
+        const result = await LeadService.list(profile, params);
 
         return NextResponse.json({
             success: true,
             data: {
-                leads: leads.leads,
-                total: leads.total,
-                page: params.page,
-                pageSize: params.pageSize,
-                totalPages: Math.ceil(leads.total / params.pageSize),
+                leads: result.leads,
+                pagination: result.pagination,
             },
             message: "Leads fetched successfully",
         })
@@ -59,10 +54,10 @@ export async function POST(request: NextRequest) {
 
         // Get request body
         const body = await request.json();
-        const data = leadsSchema.parse(body);
+        const data = LeadSchema.create.parse(body);
 
         // Create lead
-        const lead = await createLead(profile, data);
+        const lead = await LeadService.create(profile, data);
 
         return NextResponse.json({
             success: true,

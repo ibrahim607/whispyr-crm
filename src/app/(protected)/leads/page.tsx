@@ -50,15 +50,15 @@ export default function LeadsPage() {
     };
 
     return (
-        <div className='w-full h-[calc(100vh-70px)] flex  flex-col p-4'>
+        <div className='w-full h-[calc(100vh-70px)] flex  flex-col p-4 bg-gray-100'>
             <div className='flex flex-row w-full justify-between items-center'>
-                <h4 className=' py-7 text-5xl font-extrabold '>My leads</h4>
+                <h2 className=' py-7 text-4xl font-extrabold '>My Leads</h2>
                 <CreateLeadDialog />
             </div>
             <div className='flex flex-col w-full border-2 rounded-xl overflow-hidden'>
                 <div className="flex-1 overflow-auto">
                     <Table>
-                        <TableHeader className='bg-gray-100 sticky top-0 z-10'>
+                        <TableHeader className='bg-white sticky top-0 z-10'>
                             <TableRow>
                                 <TableHead className='text-gray-500 font-semibold font-sans p-4'>NAME</TableHead>
                                 <TableHead className='text-gray-500 font-semibold font-sans p-4'>EMAIL</TableHead>

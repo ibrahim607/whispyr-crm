@@ -1,5 +1,4 @@
-import { updateLead } from "@/modules/leads/db";
-import { leadsSchema } from "@/modules/leads/schema";
+import { LeadService, LeadSchema } from "@/modules/leads";
 import { authenticateUser, autheticationError } from "@/utils/autheticateUser";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
@@ -11,13 +10,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         const profile = await authenticateUser([Role.ADMIN, Role.MANAGER, Role.AGENT]);
 
         const body = await request.json();
-        const data = leadsSchema.partial().parse(body);
+        const data = LeadSchema.update.partial().parse(body);
 
-        const lead = await updateLead(id, profile, data);
+        const result = await LeadService.update(profile, id, data);
 
         return NextResponse.json({
             success: true,
-            data: lead,
+            data: result.lead,
+            activities: result.activities,
             message: "Lead updated successfully",
         });
     } catch (error) {

@@ -28,7 +28,7 @@ export function CreateLeadDialog() {
   const [note, setNote] = useState("")
   const [error, setError] = useState<string | null>(null)
 
-  const { mutateAsync: createLead } = useCreateLead({ name, email, phone, stage, status, note });
+  const { mutateAsync: createLead } = useCreateLead({ name, email, phone, note });
 
   const handleSave = async () => {
     setError(null)
