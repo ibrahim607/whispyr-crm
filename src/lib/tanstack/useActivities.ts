@@ -1,22 +1,13 @@
 import {
   GetLeadActivitiesRequest,
-  ListLeadActivitiesResponseData,
 } from "@/modules/activity/schema";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/utils/api";
+import { activityService } from "@/services/activityService";
 
 export function useGetLeadActivities(request: GetLeadActivitiesRequest) {
   return useQuery({
     queryKey: ["activities", request],
-    queryFn: async (): Promise<ListLeadActivitiesResponseData> => {
-      const { data } = await api.get(`/leads/${request.leadId}/activities`, {
-        params: {
-          page: request.page,
-          pageSize: request.pageSize,
-        },
-      });
-
-      return data.data;
-    },
+    queryFn: () => activityService.getActivities(request),
   });
 }
+
