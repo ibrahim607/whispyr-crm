@@ -5,11 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useEditLead } from '@/lib/tanstack/useLeads';
 import { LeadStage, LeadStatus } from '@/generated/prisma/enums';
 
-export default function StatusStage({ leadId, status, stage }: { leadId: string, status: string, stage: string }) {
+export default function StatusStage({ leadId, status, stage, role }: { leadId: string, status: string, stage: string, role: string }) {
 
     const [currentStatus, setCurrentStatus] = useState(status)
     const [currentStage, setCurrentStage] = useState(stage)
     const { mutateAsync: updateLead } = useEditLead(leadId);
+    const isAdminOrManager = role === "ADMIN" || role === "MANAGER";
 
     const getStatusColor = (s: string) => {
         switch (s) {
@@ -55,7 +56,7 @@ export default function StatusStage({ leadId, status, stage }: { leadId: string,
             <div className='flex flex-col gap-6'>
                 <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium text-gray-700">Status</label>
-                    <Select defaultValue={status} onValueChange={handleStatusChange}>
+                    <Select defaultValue={status} onValueChange={handleStatusChange} disabled={!isAdminOrManager}>
                         <SelectTrigger className={getStatusColor(currentStatus)}>
                             <SelectValue placeholder="Select a status" />
                         </SelectTrigger>
@@ -68,7 +69,7 @@ export default function StatusStage({ leadId, status, stage }: { leadId: string,
                 </div>
                 <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium text-gray-700">Stage</label>
-                    <Select defaultValue={stage} onValueChange={handleStageChange}>
+                    <Select defaultValue={stage} onValueChange={handleStageChange} disabled={!isAdminOrManager}>
                         <SelectTrigger className={getStageColor(currentStage)}>
                             <SelectValue placeholder="Select a stage" />
                         </SelectTrigger>
