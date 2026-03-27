@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select'
 import { useEditLead } from '@/lib/tanstack/useLeads';
 import { LeadStage, LeadStatus } from '@/generated/prisma/enums';
 

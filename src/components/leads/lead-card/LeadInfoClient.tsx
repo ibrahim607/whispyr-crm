@@ -1,11 +1,11 @@
 "use client"
 
-import LeadDescription from '@/components/leads/LeadDescription'
+import LeadDescription from '@/components/leads/lead-card/LeadDescription'
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { Spinner } from '@/components/ui/spinner'
-import StatusStage from '@/components/leads/StatusStage'
-import AccountAvatarSection from '@/components/leads/accountAvatarSection'
+import StatusStage from '@/components/leads/lead-card/StatusStage'
+import AccountAvatarSection from '@/components/leads/lead-card/accountAvatarSection'
 import { useGetLead } from '@/lib/tanstack/useLeads'
 import { Profile } from '@/generated/prisma/browser'
 
@@ -52,7 +52,6 @@ export default function LeadInfoClient({ id, profile }: LeadInfoClientProps) {
                 <div className='w-1/3 flex flex-col gap-6'>
                     <StatusStage leadId={lead.id} status={lead.status} stage={lead.stage} />
                     <div className="mt-2">
-                        <h1 className="text-2xl font-bold mb-4">Agent Info</h1>
                         <AccountAvatarSection
                             name={lead.assignedTo?.name || "Unassigned"}
                             email={lead.assignedTo?.email || "No agent assigned"}

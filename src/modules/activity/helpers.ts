@@ -9,19 +9,27 @@ export function buildActivityContent(
     }
     | undefined,
 ) {
-  if (!meta) {
+  const metaRequiredTypes: ActivityType[] = [
+    ActivityType.STAGE_CHANGE,
+    ActivityType.STATUS_CHANGE,
+    ActivityType.ASSIGNMENT_CHANGE,
+  ];
+
+  if (!meta && metaRequiredTypes.includes(activityType)) {
     return null;
   }
 
-  console.log(meta);
+  if (!meta && activityType === ActivityType.NOTE) {
+    return "Note added";
+  }
 
   switch (activityType) {
     case ActivityType.STATUS_CHANGE:
-      return `Status changed from ${meta.from} to ${meta.to}`;
+      return `Status changed from ${meta?.from} to ${meta?.to}`;
     case ActivityType.STAGE_CHANGE:
-      return `Stage changed from ${meta.from} to ${meta.to}`;
+      return `Stage changed from ${meta?.from} to ${meta?.to}`;
     case ActivityType.ASSIGNMENT_CHANGE:
-      return `Assignment changed from ${meta.from} to ${meta.to}`;
+      return `Assignment changed from ${meta?.from} to ${meta?.to}`;
     default:
       return null;
   }

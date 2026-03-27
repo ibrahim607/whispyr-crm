@@ -1,7 +1,6 @@
 import { authenticateUser } from '@/utils/autheticateUser'
-import LeadInfoClient from '@/components/leads/LeadInfoClient';
+import LeadInfoClient from '@/components/leads/lead-card/LeadInfoClient';
 import { redirect } from 'next/navigation';
-import React from 'react'
 
 export default async function LeadInfoPage({
     searchParams

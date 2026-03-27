@@ -1,4 +1,5 @@
 "use client"
+import React, { useEffect, useState } from "react"
 
 import {
     BadgeCheck,
@@ -38,11 +39,36 @@ export function NavUser({
 }) {
     const { isMobile } = useSidebar()
     const router = useRouter()
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const handleLogout = async () => {
         await supabase.auth.signOut()
         router.push("/login")
         router.refresh()
+    }
+
+    if (!mounted) {
+        return (
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton size="lg">
+                        <Avatar className="h-8 w-8 rounded-lg">
+                            <AvatarFallback className="rounded-lg">
+                                {user.name.charAt(0)}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="grid flex-1 text-left text-sm leading-tight">
+                            <span className="truncate font-medium">{user.name}</span>
+                            <span className="truncate text-xs">{user.email}</span>
+                        </div>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        )
     }
 
     return (

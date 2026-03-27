@@ -3,7 +3,7 @@ import { CreateLeadRequest, EditLeadRequest, ListLeadsParams } from "./schema";
 import { dbCreateLead, dbGetLeadById, dbListLeads, dbUpdateLead } from "./db";
 import { buildLeadChangeActivities } from "./helpers";
 import { canEditLeadContactFields } from "./permissions";
-import { ActivityService } from "../activity";
+import { ActivityService, CreateActivityRequest } from "../activity";
 import { prisma } from "@/lib/prisma";
 
 export class LeadServiceError extends Error {
@@ -27,18 +27,26 @@ export async function listLeads(profile: Profile, params: ListLeadsParams) {
 }
 
 export async function createLead(profile: Profile, data: CreateLeadRequest) {
+  const noteAdded = data.note ? true : false;
+
   const result = await prisma.$transaction(async (tx) => {
     const lead = await dbCreateLead(profile, data, tx);
-    await ActivityService.create(
-      [
-        {
-          leadId: lead.id,
-          actorId: profile.id,
-          type: ActivityType.LEAD_CREATED,
-        },
-      ],
-      tx,
-    );
+    const activities: CreateActivityRequest[] = [
+      {
+        leadId: lead.id,
+        actorId: profile.id,
+        type: ActivityType.LEAD_CREATED,
+      },
+    ];
+
+    if (noteAdded) {
+      activities.push({
+        leadId: lead.id,
+        actorId: profile.id,
+        type: ActivityType.NOTE,
+      });
+    }
+    await ActivityService.create(activities, tx);
 
     return lead;
   });
