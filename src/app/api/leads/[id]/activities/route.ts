@@ -1,4 +1,4 @@
-import { ActivitySchema, ActivityService } from "@/modules/activity";
+import { getLeadActivitiesSchema, getLeadActivities } from "@/modules/activity";
 import { authenticateUser } from "@/utils/autheticateUser";
 import { handleRouteError } from "@/utils/handleRouteErrors";
 import { NextRequest, NextResponse } from "next/server";
@@ -12,16 +12,14 @@ export async function GET(
         const profile = await authenticateUser();
 
         const searchParams = request.nextUrl.searchParams;
-        const page = searchParams.get("page");
-        const pageSize = searchParams.get("pageSize");
 
-        const validated = ActivitySchema.getByLeadId.parse({
+        const validated = getLeadActivitiesSchema.parse({
             leadId: id,
-            page: page,
-            pageSize: pageSize,
+            page: searchParams.get("page"),
+            pageSize: searchParams.get("pageSize"),
         });
 
-        const activities = await ActivityService.getByLeadId(validated, {
+        const activities = await getLeadActivities(validated, {
             id: profile.id,
             role: profile.role,
         });

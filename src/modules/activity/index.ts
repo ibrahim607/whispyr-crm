@@ -1,13 +1,21 @@
-import { createActivities, getLeadActivities } from "./service";
-import { getLeadActivitiesSchema } from "./schema";
+// Services
+export { createActivities, getLeadActivities } from "./service";
 
-export const ActivityService = {
-  create: createActivities,
-  getByLeadId: getLeadActivities,
-} as const;
+// Schemas
+export {
+  createCallAttemptSchema,
+  createNoteSchema,
+  getLeadActivitiesSchema,
+  callOutcomeEnum,
+} from "./schema";
 
-export const ActivitySchema = {
-  getByLeadId: getLeadActivitiesSchema,
-} as const;
+// Types
+export type {
+  CreateActivityRequest,
+  CreateCallAttemptRequest,
+  CreateNoteRequest,
+  GetLeadActivitiesRequest,
+  ListLeadActivitiesResponseData,
+  CallOutcome,
 
-export type { CreateActivityRequest } from "./schema";
+} from "./schema";

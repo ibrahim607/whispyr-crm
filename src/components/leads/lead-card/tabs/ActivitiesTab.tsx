@@ -19,6 +19,63 @@ import {
 } from "lucide-react";
 import { Pagination } from "../../reusable";
 import { formatDistanceToNow } from "date-fns";
+import { Button } from "@/components/ui/button";
+import LogCallDialog from "@/components/activities/LogCallDialog";
+import AddNoteDialog from "@/components/activities/AddNoteDialog";
+
+// ── Header with action buttons + dialogs ────────────────────────────────────
+
+export default function ActivitiesTab({ leadId }: { leadId: string }) {
+    const [logCallOpen, setLogCallOpen] = useState(false);
+    const [addNoteOpen, setAddNoteOpen] = useState(false);
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-slate-700">Activity Timeline</h2>
+                <div className="flex items-center gap-2">
+                    <Button
+                        id="add-note-button"
+                        variant="outline"
+                        size="sm"
+                        className="cursor-pointer"
+                        onClick={() => setAddNoteOpen(true)}
+                    >
+                        <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                        Add Note
+                    </Button>
+                    <Button
+                        id="log-call-button"
+                        variant="outline"
+                        size="sm"
+                        className="cursor-pointer"
+                        onClick={() => setLogCallOpen(true)}
+                    >
+                        <Phone className="w-3.5 h-3.5 mr-1.5" />
+                        Log Call
+                    </Button>
+                </div>
+            </div>
+
+            <Timeline leadId={leadId} />
+
+            <LogCallDialog
+                leadId={leadId}
+                open={logCallOpen}
+                onOpenChange={setLogCallOpen}
+            />
+            <AddNoteDialog
+                leadId={leadId}
+                open={addNoteOpen}
+                onOpenChange={setAddNoteOpen}
+            />
+        </div>
+    );
+}
+
+// ── Timeline (existing, exported for direct use) ─────────────────────────────
+
+
 
 export const Timeline = ({ leadId }: { leadId: string }) => {
     const [page, setPage] = useState(1);

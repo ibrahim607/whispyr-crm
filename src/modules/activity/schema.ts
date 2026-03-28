@@ -4,11 +4,13 @@ import { z } from "zod";
 
 const leadStatusSchema = z.enum(LeadStatus);
 const leadStageSchema = z.enum(LeadStage);
+
 const createActivitySchema = z
   .object({
     leadId: z.uuid(),
     actorId: z.uuid(),
     type: z.enum(ActivityType),
+    content: z.string().optional(),
     meta: z
       .object({
         from: z.unknown(),
@@ -34,8 +36,8 @@ const createActivitySchema = z
           data.meta.to = leadStageSchema.parse(data.meta.to);
           break;
         case ActivityType.ASSIGNMENT_CHANGE:
-          data.meta.from = z.string().parse(data.meta.from); // agent name
-          data.meta.to = z.string().parse(data.meta.to); // agent name
+          data.meta.from = z.string().parse(data.meta.from);
+          data.meta.to = z.string().parse(data.meta.to);
           break;
         default:
           break;
@@ -64,7 +66,35 @@ interface ActivitySummaryItem {
   createdAt: Date;
   content: string | null;
 }
+
 export type ListLeadActivitiesResponseData = {
   activities: ActivitySummaryItem[];
   pagination: PaginationMeta;
 };
+
+// ── Call Attempt ──────────────────────────────────────────────────────────────
+
+export const callOutcomeEnum = z.enum([
+  "NO_ANSWER",
+  "ANSWERED",
+  "WRONG_NUMBER",
+  "BUSY",
+  "CALL_BACK_LATER",
+]);
+
+export type CallOutcome = z.infer<typeof callOutcomeEnum>;
+
+export const createCallAttemptSchema = z.object({
+  outcome: callOutcomeEnum,
+  notes: z.string().max(5000).optional(),
+});
+
+export type CreateCallAttemptRequest = z.infer<typeof createCallAttemptSchema>;
+
+// ── Note ─────────────────────────────────────────────────────────────────────
+
+export const createNoteSchema = z.object({
+  content: z.string().min(1).max(5000),
+});
+
+export type CreateNoteRequest = z.infer<typeof createNoteSchema>;

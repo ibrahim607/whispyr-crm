@@ -7,7 +7,7 @@ import { useGetLead } from '@/lib/tanstack/useLeads'
 import { Profile } from '@/generated/prisma/browser'
 import LeadDetailNavbar, { TabId } from './LeadDetailNavbar'
 import OverviewTab from './tabs/OverviewTab'
-import { Timeline } from './tabs/ActivitiesTab'
+import ActivitiesTab from './tabs/ActivitiesTab'
 import RemindersTab from './tabs/RemindersTab'
 import AITab from './tabs/AITab'
 import FilesTab from './tabs/FilesTab'
@@ -45,7 +45,7 @@ export default function LeadInfoClient({ id, profile }: LeadInfoClientProps) {
     const renderTabContent = () => {
         switch (activeTab) {
             case 'overview': return <OverviewTab lead={lead as any} role={role} />;
-            case 'activities': return <Timeline leadId={id} />;
+            case 'activities': return <ActivitiesTab leadId={id} />;
             case 'reminders': return <RemindersTab />;
             case 'ai': return <AITab />;
             case 'files': return <FilesTab />;
@@ -54,9 +54,9 @@ export default function LeadInfoClient({ id, profile }: LeadInfoClientProps) {
     }
 
     return (
-        <div className="flex flex-col p-8 w-full max-w-7xl h-[calc(100vh-70px)] overflow-y-auto bg-gray-50/50">
+        <div className="flex flex-col p-8 w-full max-w-7xl h-[calc(100vh-70px)] bg-gray-50/50">
             {/* Back Button Area */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 shrink-0">
                 <button
                     onClick={() => router.back()}
                     className="cursor-pointer text-gray-500 hover:text-blue-600 flex items-center gap-2 text-sm font-medium transition-colors"
@@ -66,16 +66,18 @@ export default function LeadInfoClient({ id, profile }: LeadInfoClientProps) {
             </div>
 
             {/* Navigation & Main Content Card */}
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 min-h-[600px] flex flex-col">
-                <LeadDetailNavbar
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
-                />
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col flex-1 min-h-0">
+                <div className="px-8 pt-8 shrink-0">
+                    <LeadDetailNavbar
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                    />
+                </div>
 
-                <div className="mt-6">
+                <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
                     {renderTabContent()}
                 </div>
             </div>
-        </div >
+        </div>
     )
 }

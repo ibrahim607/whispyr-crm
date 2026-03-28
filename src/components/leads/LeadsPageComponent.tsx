@@ -57,7 +57,7 @@ export default function LeadsPageComponent({ role }: { role: Role }) {
         <div className='w-full h-[calc(100vh-70px)] flex  flex-col p-4 bg-gray-100'>
             <div className='flex flex-row w-full justify-between items-center'>
                 <h2 className=' py-7 text-4xl font-extrabold '>My Leads</h2>
-                <CreateLeadDialog />
+                {isManagerOrAdmin && <CreateLeadDialog />}
             </div>
             <div className='flex flex-col w-full border-2 rounded-xl overflow-hidden'>
                 <div className="flex-1 overflow-auto">

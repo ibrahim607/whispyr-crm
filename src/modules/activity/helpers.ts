@@ -1,4 +1,7 @@
+import { Lead } from "@/generated/prisma/client";
 import { ActivityType } from "@/generated/prisma/enums";
+import { EditLeadRequest } from "../leads/schema";
+import { CreateActivityRequest } from ".";
 
 export function buildActivityContent(
   activityType: ActivityType,
@@ -19,10 +22,6 @@ export function buildActivityContent(
     return null;
   }
 
-  if (!meta && activityType === ActivityType.NOTE) {
-    return "Note added";
-  }
-
   switch (activityType) {
     case ActivityType.STATUS_CHANGE:
       return `Status changed from ${meta?.from} to ${meta?.to}`;
@@ -30,6 +29,8 @@ export function buildActivityContent(
       return `Stage changed from ${meta?.from} to ${meta?.to}`;
     case ActivityType.ASSIGNMENT_CHANGE:
       return `Assignment changed from ${meta?.from} to ${meta?.to}`;
+    case ActivityType.LEAD_UPDATED:
+      return "Lead information updated";
     default:
       return null;
   }

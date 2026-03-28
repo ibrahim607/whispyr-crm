@@ -26,6 +26,15 @@ export async function dbCreateActivities(
   return created;
 }
 
+export async function dbCreateActivity(
+  data: Prisma.ActivityCreateInput,
+  tx?: Prisma.TransactionClient,
+) {
+  const client = tx ?? prisma;
+  return client.activity.create({ data });
+}
+
+
 export async function dbGetLeadActivities(
   where: Prisma.ActivityWhereInput,
   params: {

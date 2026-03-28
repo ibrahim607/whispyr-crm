@@ -1,9 +1,8 @@
 import { ActivityType, Prisma, Profile, Role } from "@/generated/prisma/client";
 import { CreateLeadRequest, EditLeadRequest, ListLeadsParams } from "./schema";
-import { dbCreateLead, dbGetLeadById, dbListLeads, dbUpdateLead } from "./db";
-import { buildLeadChangeActivities } from "./helpers";
+import { dbCreateLead, dbFindAssignableAgentById, dbGetLeadById, dbListLeads, dbUpdateLead } from "./db";
 import { canEditLeadContactFields } from "./permissions";
-import { ActivityService, CreateActivityRequest } from "../activity";
+import { CreateActivityRequest, createActivities } from "../activity";
 import { prisma } from "@/lib/prisma";
 
 export class LeadServiceError extends Error {
@@ -27,7 +26,8 @@ export async function listLeads(profile: Profile, params: ListLeadsParams) {
 }
 
 export async function createLead(profile: Profile, data: CreateLeadRequest) {
-  const noteAdded = data.note ? true : false;
+  const noteAdded = !!data.note;
+  const agentAssigned = !!data.assignedToId;
 
   const result = await prisma.$transaction(async (tx) => {
     const lead = await dbCreateLead(profile, data, tx);
@@ -44,9 +44,26 @@ export async function createLead(profile: Profile, data: CreateLeadRequest) {
         leadId: lead.id,
         actorId: profile.id,
         type: ActivityType.NOTE,
+        content: data.note,
       });
     }
-    await ActivityService.create(activities, tx);
+
+    if (agentAssigned) {
+      const agent = await dbFindAssignableAgentById(data.assignedToId!);
+      if (agent) {
+        activities.push({
+          leadId: lead.id,
+          actorId: profile.id,
+          type: ActivityType.ASSIGNMENT_CHANGE,
+          meta: {
+            from: "None",
+            to: agent.name,
+          },
+        });
+      }
+    }
+
+    await createActivities(activities, tx);
 
     return lead;
   });
@@ -83,32 +100,47 @@ export async function updateLead(
     throw new LeadServiceError("Unauthorized", 403);
   }
 
-  if (profile.role === Role.AGENT && data.assignedToId !== undefined) {
-    throw new LeadServiceError("Unauthorized", 403);
+  // status/stage update
+  if ("status" in data || "stage" in data) {
+    const activities: CreateActivityRequest[] = [];
+
+    if (data.status && data.status !== existingLead.status) {
+      activities.push({
+        leadId: id,
+        actorId: profile.id,
+        type: ActivityType.STATUS_CHANGE,
+        meta: { from: existingLead.status, to: data.status },
+      });
+    }
+
+    if (data.stage && data.stage !== existingLead.stage) {
+      activities.push({
+        leadId: id,
+        actorId: profile.id,
+        type: ActivityType.STAGE_CHANGE,
+        meta: { from: existingLead.stage, to: data.stage },
+      });
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const updatedLead = await dbUpdateLead(id, data, tx);
+      await createActivities(activities, tx);
+      return updatedLead;
+    });
   }
 
+  // contact info update
   if (!canEditLeadContactFields(profile.role, data)) {
     throw new LeadServiceError("Unauthorized", 403);
   }
 
-  const activities = buildLeadChangeActivities({
-    leadId: id,
-    actorId: profile.id,
-    existingLead,
-    newLead: data,
-  });
-
-  const result = await prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => {
     const updatedLead = await dbUpdateLead(id, data, tx);
-    const activitiesCreated = await ActivityService.create(activities, tx);
-    if (!activitiesCreated.success)
-      throw new Error("Failed to create activities");
-
-    return {
-      lead: updatedLead,
-      activities: activitiesCreated.count,
-    };
+    await createActivities([{
+      leadId: id,
+      actorId: profile.id,
+      type: ActivityType.LEAD_UPDATED,
+    }], tx);
+    return updatedLead;
   });
-
-  return result;
 }
