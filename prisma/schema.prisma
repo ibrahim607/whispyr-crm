@@ -26,8 +26,10 @@ model Profile {
   leads      Lead[]
   activities Activity[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  reminders     Reminder[]
+  notifications Notification[]
 }
 
 enum Role {
@@ -51,8 +53,10 @@ model Lead {
 
   activities Activity[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  reminders     Reminder[]
+  notifications Notification[]
 }
 
 enum LeadStatus {
@@ -95,4 +99,44 @@ enum ActivityType {
   AI_LEAD_BRIEF_GENERATED
   AI_FOLLOWUP_DRAFT_GENERATED
   LEAD_UPDATED
+}
+
+model Notification {
+  id          String                @id @default(uuid())
+  recipientId String
+  recipient   Profile               @relation(fields: [recipientId], references: [id])
+  leadId      String?
+  lead        Lead?                 @relation(fields: [leadId], references: [id])
+  title       String
+  body        String
+  readAt      DateTime?
+  readState   NotificationReadState @default(UNREAD)
+  createdAt   DateTime              @default(now())
+}
+
+enum NotificationReadState {
+  UNREAD
+  READ
+}
+
+model Reminder {
+  id              String         @id @default(uuid())
+  leadId          String
+  lead            Lead           @relation(fields: [leadId], references: [id])
+  assignedToId    String
+  assignedTo      Profile        @relation(fields: [assignedToId], references: [id])
+  title           String
+  note            String?
+  dueAt           DateTime
+  status          ReminderStatus @default(PENDING)
+  firedAt         DateTime?
+  qstashMessageId String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+enum ReminderStatus {
+  PENDING
+  FIRED
+  CANCELLED
 }
