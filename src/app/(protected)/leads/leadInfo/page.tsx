@@ -1,6 +1,8 @@
 import { authenticateUser } from '@/utils/autheticateUser'
 import LeadInfoClient from '@/components/leads/lead-card/LeadInfoClient';
 import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
+import { Role } from '@/generated/prisma/enums';
 
 export default async function LeadInfoPage({
     searchParams
@@ -14,5 +16,10 @@ export default async function LeadInfoPage({
         redirect('/leads');
     }
 
-    return <LeadInfoClient id={id} profile={profile} />
+    const agents = await prisma.profile.findMany({
+        where: { role: Role.AGENT, isActive: true },
+        select: { id: true, name: true, email: true },
+    });
+
+    return <LeadInfoClient id={id} profile={profile} agents={agents} />
 }

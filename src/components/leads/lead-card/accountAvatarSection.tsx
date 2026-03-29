@@ -9,8 +9,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '../../ui/select';
-import { useGetAgents } from '@/lib/tanstack/useProfiles';
 import { useEditLead } from '@/lib/tanstack/useLeads';
+import { AgentSummary } from '@/components/leads/lead-card/LeadInfoClient';
 
 interface AccountAvatarSectionProps {
     leadId: string;
@@ -18,6 +18,7 @@ interface AccountAvatarSectionProps {
     email: string;
     assignedToId: string | null;
     role: Role;
+    agents: AgentSummary[];
 }
 
 export default function AccountAvatarSection({
@@ -26,6 +27,7 @@ export default function AccountAvatarSection({
     email,
     assignedToId,
     role,
+    agents,
 }: AccountAvatarSectionProps) {
     const initials = name
         ? name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
@@ -33,7 +35,6 @@ export default function AccountAvatarSection({
 
     const isManagerOrAdmin = role === Role.MANAGER || role === Role.ADMIN;
 
-    const { data: agents = [], isLoading: agentsLoading } = useGetAgents();
     const { mutate: editLead, isPending } = useEditLead(leadId);
 
     function handleAgentChange(agentId: string) {
@@ -61,7 +62,7 @@ export default function AccountAvatarSection({
                 <Select
                     value={assignedToId ?? undefined}
                     onValueChange={handleAgentChange}
-                    disabled={agentsLoading || isPending}
+                    disabled={isPending}
                 >
                     <SelectTrigger className="w-full">
                         <SelectValue placeholder="Reassign agent…" />

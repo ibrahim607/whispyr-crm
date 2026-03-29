@@ -11,14 +11,20 @@ import ActivitiesTab from './tabs/ActivitiesTab'
 import RemindersTab from './tabs/RemindersTab'
 import AITab from './tabs/AITab'
 import FilesTab from './tabs/FilesTab'
-import AccountAvatarSection from './accountAvatarSection'
+
+export interface AgentSummary {
+    id: string;
+    name: string;
+    email: string;
+}
 
 interface LeadInfoClientProps {
     id: string;
     profile: Profile;
+    agents: AgentSummary[];
 }
 
-export default function LeadInfoClient({ id, profile }: LeadInfoClientProps) {
+export default function LeadInfoClient({ id, profile, agents }: LeadInfoClientProps) {
     const router = useRouter()
     const { data: lead, isLoading, error } = useGetLead(id);
     const [activeTab, setActiveTab] = useState<TabId>('overview')
@@ -44,12 +50,12 @@ export default function LeadInfoClient({ id, profile }: LeadInfoClientProps) {
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case 'overview': return <OverviewTab lead={lead as any} role={role} />;
+            case 'overview': return <OverviewTab lead={lead as any} role={role} agents={agents} />;
             case 'activities': return <ActivitiesTab leadId={id} />;
             case 'reminders': return <RemindersTab />;
             case 'ai': return <AITab />;
             case 'files': return <FilesTab />;
-            default: return <OverviewTab lead={lead as any} role={role} />;
+            default: return <OverviewTab lead={lead as any} role={role} agents={agents} />;
         }
     }
 

@@ -6,6 +6,7 @@ import StatusStage from '@/components/leads/lead-card/StatusStage'
 import AccountAvatarSection from '@/components/leads/lead-card/accountAvatarSection'
 import { Role } from '@/generated/prisma/enums'
 import { Button } from '@/components/ui/button'
+import { AgentSummary } from '@/components/leads/lead-card/LeadInfoClient'
 
 interface OverviewTabProps {
     lead: {
@@ -21,10 +22,11 @@ interface OverviewTabProps {
             name: string;
             email: string;
         } | null;
-    }
+    };
+    agents: AgentSummary[];
 }
 
-export default function OverviewTab({ lead, role }: OverviewTabProps & { role: Role }) {
+export default function OverviewTab({ lead, role, agents }: OverviewTabProps & { role: Role }) {
     const isManagerOrAdmin = role === Role.MANAGER || role === Role.ADMIN;
     const [isEditing, setIsEditing] = React.useState(false);
 
@@ -62,6 +64,7 @@ export default function OverviewTab({ lead, role }: OverviewTabProps & { role: R
                         email={lead.assignedTo?.email || "No agent assigned"}
                         assignedToId={lead.assignedTo?.id ?? null}
                         role={role}
+                        agents={agents}
                     />
                 </div>
             </div>
