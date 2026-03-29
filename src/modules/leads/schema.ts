@@ -33,6 +33,12 @@ export const updateContactSchema = z.object({
 
 export type UpdateContactRequest = z.infer<typeof updateContactSchema>;
 
+export const updateAssignmentSchema = z.object({
+  assignedToId: z.string().uuid().nullable(),
+});
+
+export type UpdateAssignmentRequest = z.infer<typeof updateAssignmentSchema>;
+
 export const updateStatusStageSchema = z.object({
   status: z.nativeEnum(LeadStatus).optional(),
   stage: z.nativeEnum(LeadStage).optional(),
@@ -43,10 +49,10 @@ export const updateStatusStageSchema = z.object({
 
 export type UpdateStatusStageRequest = z.infer<typeof updateStatusStageSchema>;
 
-// Union of all valid PATCH shapes — kept as EditLeadRequest for back-compat
-export const editLeadSchema = z.union([updateContactSchema, updateStatusStageSchema]);
+// Union of all valid PATCH shapes
+export const editLeadSchema = z.union([updateContactSchema, updateStatusStageSchema, updateAssignmentSchema]);
 
-export type EditLeadRequest = UpdateContactRequest | UpdateStatusStageRequest;
+export type EditLeadRequest = UpdateContactRequest | UpdateStatusStageRequest | UpdateAssignmentRequest;
 
 export interface LeadAssigneeSummary {
   id: string;

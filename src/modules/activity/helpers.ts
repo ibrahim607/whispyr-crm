@@ -1,17 +1,14 @@
-import { Lead } from "@/generated/prisma/client";
 import { ActivityType } from "@/generated/prisma/enums";
-import { EditLeadRequest } from "../leads/schema";
+import { Lead } from "@/generated/prisma/client";
+import { UpdateStatusStageRequest } from "../leads/schema";
 import { CreateActivityRequest } from ".";
+
+// ── Content builder (used internally & for display) ──────────────────────────
 
 export function buildActivityContent(
   activityType: ActivityType,
-  meta:
-    | {
-      from: unknown;
-      to: unknown;
-    }
-    | undefined,
-) {
+  meta?: { from: unknown; to: unknown },
+): string | null {
   const metaRequiredTypes: ActivityType[] = [
     ActivityType.STAGE_CHANGE,
     ActivityType.STATUS_CHANGE,
@@ -31,7 +28,82 @@ export function buildActivityContent(
       return `Assignment changed from ${meta?.from} to ${meta?.to}`;
     case ActivityType.LEAD_UPDATED:
       return "Lead information updated";
+    case ActivityType.NOTE:
+      return null; // content is stored directly on the activity
+    case ActivityType.LEAD_CREATED:
+      return null;
     default:
       return null;
   }
+}
+
+// ── Activity builders ─────────────────────────────────────────────────────────
+
+export function buildLeadCreatedActivity(
+  leadId: string,
+  actorId: string,
+): CreateActivityRequest {
+  return { leadId, actorId, type: ActivityType.LEAD_CREATED };
+}
+
+export function buildLeadUpdatedActivity(
+  leadId: string,
+  actorId: string,
+): CreateActivityRequest {
+  return { leadId, actorId, type: ActivityType.LEAD_UPDATED };
+}
+
+export function buildNoteActivity(
+  leadId: string,
+  actorId: string,
+  content: string,
+): CreateActivityRequest {
+  return { leadId, actorId, type: ActivityType.NOTE, content };
+}
+
+export function buildAssignmentActivity(
+  leadId: string,
+  actorId: string,
+  fromName: string,
+  toName: string,
+): CreateActivityRequest {
+  return {
+    leadId,
+    actorId,
+    type: ActivityType.ASSIGNMENT_CHANGE,
+    meta: { from: fromName, to: toName },
+  };
+}
+
+/**
+ * Returns 0–2 activities for a status/stage update.
+ * Only pushes an activity when the value actually changed.
+ */
+export function buildStatusStageActivities(
+  leadId: string,
+  actorId: string,
+  existingLead: Pick<Lead, "status" | "stage">,
+  data: UpdateStatusStageRequest,
+): CreateActivityRequest[] {
+  const activities: CreateActivityRequest[] = [];
+
+  if (data.status && data.status !== existingLead.status) {
+    activities.push({
+      leadId,
+      actorId,
+      type: ActivityType.STATUS_CHANGE,
+      meta: { from: existingLead.status, to: data.status },
+    });
+  }
+
+  if (data.stage && data.stage !== existingLead.stage) {
+    activities.push({
+      leadId,
+      actorId,
+      type: ActivityType.STAGE_CHANGE,
+      meta: { from: existingLead.stage, to: data.stage },
+    });
+  }
+
+  return activities;
 }

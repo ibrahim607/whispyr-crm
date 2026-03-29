@@ -1,6 +1,16 @@
 // Services
 export { createActivities, getLeadActivities } from "./service";
 
+// Helpers
+export {
+  buildActivityContent,
+  buildLeadCreatedActivity,
+  buildLeadUpdatedActivity,
+  buildNoteActivity,
+  buildAssignmentActivity,
+  buildStatusStageActivities,
+} from "./helpers";
+
 // Schemas
 export {
   createCallAttemptSchema,
@@ -17,5 +27,4 @@ export type {
   GetLeadActivitiesRequest,
   ListLeadActivitiesResponseData,
   CallOutcome,
-
 } from "./schema";

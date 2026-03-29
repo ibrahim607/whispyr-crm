@@ -1,8 +1,15 @@
-import { ActivityType, Prisma, Profile, Role } from "@/generated/prisma/client";
-import { CreateLeadRequest, EditLeadRequest, ListLeadsParams } from "./schema";
+import { Prisma, Profile, Role } from "@/generated/prisma/client";
+import { CreateLeadRequest, EditLeadRequest, ListLeadsParams, UpdateAssignmentRequest, UpdateContactRequest } from "./schema";
 import { dbCreateLead, dbFindAssignableAgentById, dbGetLeadById, dbListLeads, dbUpdateLead } from "./db";
-import { canEditLeadContactFields } from "./permissions";
-import { CreateActivityRequest, createActivities } from "../activity";
+import { canEditLeadAssignedAgent, canEditLeadContactFields } from "./permissions";
+import {
+  createActivities,
+  buildLeadCreatedActivity,
+  buildLeadUpdatedActivity,
+  buildNoteActivity,
+  buildAssignmentActivity,
+  buildStatusStageActivities,
+} from "../activity";
 import { prisma } from "@/lib/prisma";
 
 export class LeadServiceError extends Error {
@@ -26,45 +33,22 @@ export async function listLeads(profile: Profile, params: ListLeadsParams) {
 }
 
 export async function createLead(profile: Profile, data: CreateLeadRequest) {
-  const noteAdded = !!data.note;
-  const agentAssigned = !!data.assignedToId;
-
   const result = await prisma.$transaction(async (tx) => {
     const lead = await dbCreateLead(profile, data, tx);
-    const activities: CreateActivityRequest[] = [
-      {
-        leadId: lead.id,
-        actorId: profile.id,
-        type: ActivityType.LEAD_CREATED,
-      },
-    ];
+    const activities = [buildLeadCreatedActivity(lead.id, profile.id)];
 
-    if (noteAdded) {
-      activities.push({
-        leadId: lead.id,
-        actorId: profile.id,
-        type: ActivityType.NOTE,
-        content: data.note,
-      });
+    if (data.note) {
+      activities.push(buildNoteActivity(lead.id, profile.id, data.note));
     }
 
-    if (agentAssigned) {
-      const agent = await dbFindAssignableAgentById(data.assignedToId!);
+    if (data.assignedToId) {
+      const agent = await dbFindAssignableAgentById(data.assignedToId);
       if (agent) {
-        activities.push({
-          leadId: lead.id,
-          actorId: profile.id,
-          type: ActivityType.ASSIGNMENT_CHANGE,
-          meta: {
-            from: "None",
-            to: agent.name,
-          },
-        });
+        activities.push(buildAssignmentActivity(lead.id, profile.id, "None", agent.name));
       }
     }
 
     await createActivities(activities, tx);
-
     return lead;
   });
 
@@ -100,27 +84,9 @@ export async function updateLead(
     throw new LeadServiceError("Unauthorized", 403);
   }
 
-  // status/stage update
+  // --- status / stage update ---
   if ("status" in data || "stage" in data) {
-    const activities: CreateActivityRequest[] = [];
-
-    if (data.status && data.status !== existingLead.status) {
-      activities.push({
-        leadId: id,
-        actorId: profile.id,
-        type: ActivityType.STATUS_CHANGE,
-        meta: { from: existingLead.status, to: data.status },
-      });
-    }
-
-    if (data.stage && data.stage !== existingLead.stage) {
-      activities.push({
-        leadId: id,
-        actorId: profile.id,
-        type: ActivityType.STAGE_CHANGE,
-        meta: { from: existingLead.stage, to: data.stage },
-      });
-    }
+    const activities = buildStatusStageActivities(id, profile.id, existingLead, data);
 
     return prisma.$transaction(async (tx) => {
       const updatedLead = await dbUpdateLead(id, data, tx);
@@ -129,18 +95,41 @@ export async function updateLead(
     });
   }
 
-  // contact info update
-  if (!canEditLeadContactFields(profile.role, data)) {
+  // --- assignment update ---
+  if ("assignedToId" in data) {
+    const assignmentData = data as UpdateAssignmentRequest;
+
+    if (!canEditLeadAssignedAgent(profile.role)) {
+      throw new LeadServiceError("Unauthorized", 403);
+    }
+
+    const newAgentId = assignmentData.assignedToId;
+    const agent = newAgentId ? await dbFindAssignableAgentById(newAgentId) : null;
+
+    return prisma.$transaction(async (tx) => {
+      const updatedLead = await dbUpdateLead(id, assignmentData, tx);
+      await createActivities([
+        buildAssignmentActivity(
+          id,
+          profile.id,
+          existingLead.assignedToId ?? "None",
+          agent?.name ?? "None",
+        ),
+      ], tx);
+      return updatedLead;
+    });
+  }
+
+  // --- contact info update ---
+  const contactData = data as UpdateContactRequest;
+
+  if (!canEditLeadContactFields(profile.role, contactData)) {
     throw new LeadServiceError("Unauthorized", 403);
   }
 
   return prisma.$transaction(async (tx) => {
-    const updatedLead = await dbUpdateLead(id, data, tx);
-    await createActivities([{
-      leadId: id,
-      actorId: profile.id,
-      type: ActivityType.LEAD_UPDATED,
-    }], tx);
+    const updatedLead = await dbUpdateLead(id, contactData, tx);
+    await createActivities([buildLeadUpdatedActivity(id, profile.id)], tx);
     return updatedLead;
   });
 }
