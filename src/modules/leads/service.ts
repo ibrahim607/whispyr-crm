@@ -112,7 +112,7 @@ export async function updateLead(
         buildAssignmentActivity(
           id,
           profile.id,
-          existingLead.assignedToId ?? "None",
+          existingLead.assignedTo?.name ?? "None",
           agent?.name ?? "None",
         ),
       ], tx);

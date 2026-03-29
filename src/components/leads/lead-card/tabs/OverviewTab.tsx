@@ -17,13 +17,14 @@ interface OverviewTabProps {
         stage: string;
         createdAt: string | Date;
         assignedTo?: {
+            id: string;
             name: string;
             email: string;
         } | null;
     }
 }
 
-export default function OverviewTab({ lead, role }: OverviewTabProps & { role: string }) {
+export default function OverviewTab({ lead, role }: OverviewTabProps & { role: Role }) {
     const isManagerOrAdmin = role === Role.MANAGER || role === Role.ADMIN;
     const [isEditing, setIsEditing] = React.useState(false);
 
@@ -56,8 +57,11 @@ export default function OverviewTab({ lead, role }: OverviewTabProps & { role: s
                 <StatusStage leadId={lead.id} status={lead.status as any} stage={lead.stage as any} role={role} />
                 <div className="mt-2">
                     <AccountAvatarSection
+                        leadId={lead.id}
                         name={lead.assignedTo?.name || "Unassigned"}
                         email={lead.assignedTo?.email || "No agent assigned"}
+                        assignedToId={lead.assignedTo?.id ?? null}
+                        role={role}
                     />
                 </div>
             </div>
