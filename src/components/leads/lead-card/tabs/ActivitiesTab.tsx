@@ -172,6 +172,7 @@ export const Timeline = ({ leadId }: { leadId: string }) => {
                 pageCount={pageCount}
                 isLoading={isLoading}
                 setPage={setPage}
+                itemLabel="activities"
             />
         </div>
     );

@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar"
-import TopBar from "@/components/top-bar"
+import { TopBar } from "@/components/top-bar"
 import { Sidebar, SidebarProvider } from "@/components/ui/sidebar"
 import { prisma } from "@/lib/prisma"
 import { QueryProvider } from "@/lib/provider/QueryProvider"
@@ -26,8 +26,9 @@ export default async function ProtectedLayout({ children }: { children: React.Re
             <SidebarProvider>
                 <AppSidebar role={profile.role} user={profile} />
                 <main className="flex flex-col flex-1 w-full">
-                    <TopBar profile={profile} />
-                    {children}
+                    <TopBar role={profile.role} email={profile.email} >
+                        {children}
+                    </TopBar>
                 </main>
             </SidebarProvider>
         </QueryProvider>

@@ -50,16 +50,17 @@ export function StageBadge({ stage }: { stage: LeadStage }) {
     return <Badge variant={stageVariantMap[stage]}>{formatEnumLabel(stage)}</Badge>;
 }
 
-export function Pagination({ startItem, endItem, total, page, pageCount, isLoading, setPage }: { startItem: number, endItem: number, total: number, page: number, pageCount: number, isLoading: boolean, setPage: Dispatch<SetStateAction<number>> }) {
+export function Pagination({ startItem, endItem, total, page, pageCount, isLoading, setPage, itemLabel, inSmallSpace }: { startItem: number, endItem: number, total: number, page: number, pageCount: number, isLoading: boolean, setPage: Dispatch<SetStateAction<number>>, itemLabel: string, inSmallSpace?: boolean }) {
     return (
-        <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/70 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-slate-500">
-                Showing {startItem}-{endItem} of {total} leads
+        <div className={`flex flex-col border-t border-slate-200 bg-slate-50/70 ${inSmallSpace ? "items-center gap-2 px-4 py-3" : "gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"}`}>
+            <div className={`text-slate-500 ${inSmallSpace ? "text-xs" : "text-sm"}`}>
+                Showing {startItem}-{endItem} of {total} {itemLabel}
             </div>
 
             <div className="flex items-center gap-2">
                 <Button
                     variant="outline"
+                    size={inSmallSpace ? "sm" : "default"}
                     className="rounded-xl bg-white"
                     onClick={() =>
                         setPage((currentPage) => Math.max(1, currentPage - 1))
@@ -68,10 +69,11 @@ export function Pagination({ startItem, endItem, total, page, pageCount, isLoadi
                 >
                     Previous
                 </Button>
-                <div className="text-sm text-slate-500">
+                <div className={`text-slate-500 ${inSmallSpace ? "text-xs" : "text-sm"}`}>
                     Page {page} of {Math.max(pageCount, 1)}
                 </div>
                 <Button
+                    size={inSmallSpace ? "sm" : "default"}
                     className="rounded-xl shadow-sm"
                     onClick={() =>
                         setPage((currentPage) =>

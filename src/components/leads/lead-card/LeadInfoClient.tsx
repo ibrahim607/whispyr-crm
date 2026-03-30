@@ -52,7 +52,7 @@ export default function LeadInfoClient({ id, profile, agents }: LeadInfoClientPr
         switch (activeTab) {
             case 'overview': return <OverviewTab lead={lead as any} role={role} agents={agents} />;
             case 'activities': return <ActivitiesTab leadId={id} />;
-            case 'reminders': return <RemindersTab />;
+            case 'reminders': return <RemindersTab leadId={id} />;
             case 'ai': return <AITab />;
             case 'files': return <FilesTab />;
             default: return <OverviewTab lead={lead as any} role={role} agents={agents} />;

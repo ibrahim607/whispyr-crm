@@ -23,5 +23,6 @@ export const handleRouteError = (error: unknown) => {
         );
     }
 
+    console.error("API ROUTE ERROR:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
 };
