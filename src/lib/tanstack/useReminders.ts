@@ -70,4 +70,4 @@ export function useCancelReminder() {
             queryClient.invalidateQueries({ queryKey: ["reminders"] });
         },
     });
-}
+}

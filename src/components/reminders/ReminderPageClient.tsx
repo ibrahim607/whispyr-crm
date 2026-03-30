@@ -219,7 +219,7 @@ export function RemindersPageClient({ profile, agents }: { profile: Profile, age
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 text-xs text-slate-600"
+                            className="h-7 text-xs text-red-600 bg-red-50 hover:bg-red-100 border-red-200 cursor-pointer"
                             onClick={() => cancelReminder.mutate(reminder.id)}
                             disabled={cancelReminder.isPending}
                           >

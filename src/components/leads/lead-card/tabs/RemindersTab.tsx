@@ -1,105 +1,103 @@
 "use client"
 
-import { Calendar } from "@/components/ui/calendar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
-import { useCreateLeadReminder } from "@/lib/tanstack/useReminders"
-import { CreateReminderRequest } from "@/modules/reminder/schema"
+import { useGetLeadReminders, useCancelReminder } from "@/lib/tanstack/useReminders"
+import { Spinner } from "@/components/ui/spinner"
 import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
-import React, { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
-function mergeDateKeepingTime(base: Date, nextDay: Date): Date {
-    const d = new Date(nextDay)
-    d.setHours(base.getHours(), base.getMinutes(), 0, 0)
-    return d
+function getReminderDisplayStatus(status: string, dueAt: string | Date) {
+    if (status === "FIRED") return "completed"
+    if (status === "CANCELLED") return "cancelled"
+    if (status === "PENDING" && new Date(dueAt) < new Date()) return "overdue"
+    return "upcoming"
 }
 
 export default function RemindersTab({ leadId }: { leadId: string }) {
-    const [pickerOpen, setPickerOpen] = useState(false)
-    const [formData, setFormData] = useState<CreateReminderRequest>({
-        title: "",
-        note: "",
-        dueAt: new Date(),
-        leadId,
-    })
-    const { mutate: createReminder } = useCreateLeadReminder(leadId)
+    const { data, isLoading, error } = useGetLeadReminders(leadId, { page: 1, pageSize: 10 })
+    const cancelReminder = useCancelReminder()
 
-    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault()
-        createReminder(formData)
+    if (isLoading) {
+        return <div className="flex justify-center p-8"><Spinner /></div>
+    }
+
+    if (error) {
+        return <div className="text-red-500 p-8 text-center bg-red-50 rounded-xl">Error loading reminders</div>
+    }
+
+    const reminders = data?.reminders || []
+
+    if (reminders.length === 0) {
+        return <div className="text-slate-500 p-8 text-center italic bg-slate-50 rounded-xl">No reminders found.</div>
     }
 
     return (
-        <div>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-                <Input
-                    placeholder="Reminder title"
-                    value={formData.title}
-                    onChange={(e) =>
-                        setFormData({ ...formData, title: e.target.value })
-                    }
-                />
-                <Input
-                    placeholder="Reminder description"
-                    value={formData.note}
-                    onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                />
-                <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-                    <PopoverTrigger asChild>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="h-8 w-full justify-start px-2.5 font-normal"
-                        >
-                            <CalendarIcon className="mr-2 size-4 shrink-0" />
-                            {format(formData.dueAt, "PPP p")}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                        <div className="flex flex-col gap-2 p-3">
-                            <Calendar
-                                mode="single"
-                                selected={formData.dueAt}
-                                onSelect={(date) => {
-                                    if (!date) return
-                                    setFormData({
-                                        ...formData,
-                                        dueAt: mergeDateKeepingTime(formData.dueAt, date),
-                                    })
-                                }}
-                                initialFocus
-                            />
-                            <div className="flex flex-col gap-1.5 border-t pt-3">
-                                <Label htmlFor="reminder-due-time" className="px-1">
-                                    Time
-                                </Label>
-                                <Input
-                                    id="reminder-due-time"
-                                    type="time"
-                                    step={60}
-                                    value={format(formData.dueAt, "HH:mm")}
-                                    onChange={(e) => {
-                                        const v = e.target.value
-                                        if (!v) return
-                                        const [h, m] = v.split(":").map(Number)
-                                        const next = new Date(formData.dueAt)
-                                        next.setHours(h, m, 0, 0)
-                                        setFormData({ ...formData, dueAt: next })
-                                    }}
-                                />
-                            </div>
+        <div className="flex flex-col gap-4">
+            {reminders.map(reminder => {
+                const displayStatus = getReminderDisplayStatus(reminder.status, reminder.dueAt)
+                const isOverdue = displayStatus === "overdue"
+                const isCompleted = displayStatus === "completed"
+                const isCancelled = displayStatus === "cancelled"
+                const isPending = reminder.status === "PENDING"
+
+                return (
+                    <div
+                        key={reminder.id}
+                        className={`border rounded-xl p-5 flex items-center justify-between shadow-sm bg-white ${isOverdue ? "border-red-200" : "border-slate-200"}`}
+                    >
+                        <div className="flex flex-col gap-1.5 min-w-0 pr-4">
+                            <h3 className={`font-medium ${isCompleted || isCancelled ? "text-slate-400 line-through" : "text-slate-900"}`}>
+                                {reminder.title}
+                            </h3>
+                            {isCompleted ? (
+                                <p className="text-xs text-slate-400 tracking-wide font-medium">
+                                    Completed: {format(new Date(reminder.updatedAt || reminder.dueAt), "MMM d, yyyy")}
+                                </p>
+                            ) : (
+                                <p className={`text-xs font-medium tracking-wide ${isOverdue ? "text-red-500" : "text-slate-500"}`}>
+                                    {isOverdue ? "Due: " : "Due: "}{format(new Date(reminder.dueAt), "MMM d, yyyy 'at' h:mm a")} {isOverdue && "(Overdue)"}
+                                </p>
+                            )}
                         </div>
-                    </PopoverContent>
-                </Popover>
-                <Button type="submit">Create Reminder</Button>
-            </form>
+
+                        <div className="flex flex-wrap items-center gap-3 shrink-0">
+                            {displayStatus === "upcoming" && (
+                                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 shadow-none px-3 py-1 text-xs font-semibold border-none">
+                                    Upcoming
+                                </Badge>
+                            )}
+                            {displayStatus === "overdue" && (
+                                <Badge className="bg-red-50 text-red-600 hover:bg-red-50 shadow-none px-3 py-1 text-xs font-semibold border-none">
+                                    Overdue
+                                </Badge>
+                            )}
+                            {displayStatus === "completed" && (
+                                <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 shadow-none px-3 py-1 text-xs font-semibold border-none">
+                                    Completed
+                                </Badge>
+                            )}
+                            {displayStatus === "cancelled" && (
+                                <Badge variant="outline" className="px-3 py-1 text-xs shadow-none font-semibold text-slate-600 bg-slate-50 border-slate-200">
+                                    Cancelled
+                                </Badge>
+                            )}
+
+                            {isPending && (
+                                <>
+                                    <Button
+                                        size="sm"
+                                        onClick={() => cancelReminder.mutate(reminder.id)}
+                                        disabled={cancelReminder.isPending}
+                                        className="bg-slate-100/80 text-slate-600 hover:bg-slate-200/80 hover:text-slate-800 shadow-none rounded-lg px-4 h-8 transition-colors text-xs font-semibold"
+                                    >
+                                        Cancel
+                                    </Button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )
+            })}
         </div>
     )
 }

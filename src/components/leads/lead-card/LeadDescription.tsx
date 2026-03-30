@@ -131,7 +131,7 @@ export default function LeadDescription({ leadId, name: initialName, email: init
             {isEditing && (
                 <div className='pt-6 mt-4 border-t border-slate-50 flex gap-3'>
                     <Button
-                        className='flex-1 bg-slate-900 hover:bg-slate-800 h-10'
+                        className='flex-1 hover:bg-blue-800 h-10 bg-blue-700 text-white'
                         onClick={handleSave}
                         disabled={isPending}
                     >

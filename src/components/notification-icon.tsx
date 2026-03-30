@@ -30,7 +30,7 @@ export function NotificationBell() {
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
+                <Button variant="ghost" size="icon" className="relative" suppressHydrationWarning>
                     <Bell className="size-5" />
                     {unreadCount > 0 ? (
                         <span className="absolute -top-1 -right-1 rounded-full bg-rose-500 px-1.5 text-[10px] text-white">

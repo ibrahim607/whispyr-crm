@@ -11,6 +11,7 @@ import ActivitiesTab from './tabs/ActivitiesTab'
 import RemindersTab from './tabs/RemindersTab'
 import AITab from './tabs/AITab'
 import FilesTab from './tabs/FilesTab'
+import { CreateReminderDialog } from '@/components/reminders/CreateReminderDialog'
 
 export interface AgentSummary {
     id: string;
@@ -61,14 +62,13 @@ export default function LeadInfoClient({ id, profile, agents }: LeadInfoClientPr
 
     return (
         <div className="flex flex-col p-8 w-full max-w-7xl h-[calc(100vh-70px)] bg-gray-50/50">
-            {/* Back Button Area */}
+            {/* Header Area */}
             <div className="flex items-center justify-between mb-6 shrink-0">
-                <button
-                    onClick={() => router.back()}
-                    className="cursor-pointer text-gray-500 hover:text-blue-600 flex items-center gap-2 text-sm font-medium transition-colors"
-                >
-                    &larr; Back to Leads
-                </button>
+                <div className="flex items-center gap-3">
+                    <h1 className="text-3xl font-bold text-slate-900">{lead.name}</h1>
+                    <span className="bg-green-100 text-green-700 px-2.5 py-0.5 rounded text-xs font-semibold">Active</span>
+                </div>
+                <CreateReminderDialog leadId={id} />
             </div>
 
             {/* Navigation & Main Content Card */}

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import {
     Popover,
@@ -32,6 +33,7 @@ function mergeDateAndTime(date: Date, hours: number, minutes: number): Date {
 export function CreateReminderDialog({ leadId }: { leadId: string }) {
     const [open, setOpen] = useState(false);
     const [title, setTitle] = useState("");
+    const [note, setNote] = useState("");
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [timeValue, setTimeValue] = useState("10:00");
     const [calendarOpen, setCalendarOpen] = useState(false);
@@ -40,6 +42,7 @@ export function CreateReminderDialog({ leadId }: { leadId: string }) {
 
     function resetForm() {
         setTitle("");
+        setNote("");
         setSelectedDate(new Date());
         setTimeValue("10:00");
         setError("");
@@ -70,6 +73,7 @@ export function CreateReminderDialog({ leadId }: { leadId: string }) {
         try {
             await createReminder.mutateAsync({
                 title: title.trim(),
+                note: note.trim() || undefined,
                 dueAt,
                 leadId,
             });
@@ -83,17 +87,18 @@ export function CreateReminderDialog({ leadId }: { leadId: string }) {
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <Button className="h-9 gap-2 rounded-lg px-4">
+                <Button className="h-9 gap-2 rounded-lg px-4 bg-blue-700 hover:bg-blue-800 text-white shrink-0 whitespace-nowrap">
                     <Plus className="size-4" />
                     Create Reminder
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-[28rem] p-0">
-                <DialogHeader>
-                    <DialogTitle>Create Reminder</DialogTitle>
+
+            <DialogContent className="max-w-md p-5">
+                <DialogHeader className="">
+                    <DialogTitle className="font-bold font-sans">Create Reminder</DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-4 px-6 py-6">
+                <form onSubmit={handleSubmit} className="space-y-4 px-6 ">
                     <div className="space-y-2">
                         <Label htmlFor="reminder-title" className="text-sm font-medium">
                             Title <span className="text-destructive">*</span>
@@ -104,6 +109,20 @@ export function CreateReminderDialog({ leadId }: { leadId: string }) {
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="e.g. Follow up on pricing discussion"
                             disabled={createReminder.isPending}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="reminder-note" className="text-sm font-medium">
+                            Description
+                        </Label>
+                        <Textarea
+                            id="reminder-note"
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            placeholder="Add more details about this reminder"
+                            disabled={createReminder.isPending}
+                            className="resize-none h-20"
                         />
                     </div>
 
@@ -170,7 +189,7 @@ export function CreateReminderDialog({ leadId }: { leadId: string }) {
                         <Button
                             type="submit"
                             disabled={createReminder.isPending}
-                            className="h-11 rounded-xl px-8"
+                            className="h-11 rounded-xl px-8 bg-blue-700 hover:bg-blue-800 text-white"
                         >
                             {createReminder.isPending ? "Creating..." : "Create Reminder"}
                         </Button>
