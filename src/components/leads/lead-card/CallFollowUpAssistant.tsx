@@ -13,6 +13,7 @@ import {
     Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
+import { FollowupReview } from "@/components/activities/FollowupReview";
 
 export function CallFollowUpAssistant({ leadId }: { leadId: string }) {
     const [error, setError] = useState<string | null>(null);
@@ -58,65 +59,19 @@ export function CallFollowUpAssistant({ leadId }: { leadId: string }) {
     // Result state – compact sidebar card
     if (result && !dismissed) {
         return (
-            <Card>
-                <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                        <Phone className="h-5 w-5 text-blue-600" />
-                        Call Follow-up Assistant
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {/* Call context banner */}
-                    <div className="rounded-md bg-emerald-50 border border-emerald-200 p-3">
-                        <p className="text-sm text-emerald-800">
-                            Based on your recent call activity
-                        </p>
-                    </div>
-
-                    {/* Suggested Talking Points */}
-                    <div>
-                        <h4 className="text-sm font-semibold mb-2">Suggested Talking Points</h4>
-                        <ul className="space-y-1.5">
-                            {result.callScript.questions.map((question, i) => (
-                                <li key={i} className="flex gap-2 text-sm text-muted-foreground">
-                                    <span className="text-muted-foreground/60">•</span>
-                                    <span>{question}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Recommended Next Action */}
-                    <div>
-                        <h4 className="text-sm font-semibold mb-1">Recommended Next Action</h4>
-                        <p className="text-sm text-muted-foreground">
-                            {result.recommendedNextStep}
-                        </p>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2 pt-1">
-                        <Button
-                            className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
-                            size="sm"
-                            onClick={handleCreateReminder}
-                            disabled={createReminder.isPending}
-                        >
-                            {createReminder.isPending ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : null}
-                            {createReminder.isPending ? "Creating..." : "Create Reminder"}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleDismiss}
-                        >
-                            Dismiss
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="bg-card text-card-foreground border rounded-lg shadow-sm">
+                <div className="p-6 pb-2 font-semibold flex items-center gap-2">
+                    <Phone className="h-5 w-5 text-blue-600" />
+                    Call Follow-up Assistant
+                </div>
+                <div className="px-4 pb-4">
+                    <FollowupReview 
+                        followUpData={result} 
+                        leadId={leadId} 
+                        onClose={handleDismiss} 
+                    />
+                </div>
+            </div>
         );
     }
 
