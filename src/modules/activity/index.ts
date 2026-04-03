@@ -9,6 +9,7 @@ export {
   buildNoteActivity,
   buildAssignmentActivity,
   buildStatusStageActivities,
+  buildAiLeadBriefGeneratedActivity,
 } from "./helpers";
 
 // Schemas

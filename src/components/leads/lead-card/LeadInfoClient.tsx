@@ -9,7 +9,7 @@ import LeadDetailNavbar, { TabId } from './LeadDetailNavbar'
 import OverviewTab from './tabs/OverviewTab'
 import ActivitiesTab from './tabs/ActivitiesTab'
 import RemindersTab from './tabs/RemindersTab'
-import AITab from './tabs/AITab'
+import { AI } from './tabs/AITab'
 import FilesTab from './tabs/FilesTab'
 import { CreateReminderDialog } from '@/components/reminders/CreateReminderDialog'
 
@@ -54,7 +54,7 @@ export default function LeadInfoClient({ id, profile, agents }: LeadInfoClientPr
             case 'overview': return <OverviewTab lead={lead as any} role={role} agents={agents} />;
             case 'activities': return <ActivitiesTab leadId={id} />;
             case 'reminders': return <RemindersTab leadId={id} />;
-            case 'ai': return <AITab />;
+            case 'ai': return <AI leadId={id} />;
             case 'files': return <FilesTab />;
             default: return <OverviewTab lead={lead as any} role={role} agents={agents} />;
         }

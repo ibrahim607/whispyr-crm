@@ -107,3 +107,10 @@ export function buildStatusStageActivities(
 
   return activities;
 }
+
+export function buildAiLeadBriefGeneratedActivity(
+  leadId: string,
+  actorId: string,
+): CreateActivityRequest {
+  return { leadId, actorId, type: ActivityType.AI_LEAD_BRIEF_GENERATED };
+}
