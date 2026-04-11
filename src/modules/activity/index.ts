@@ -1,31 +1,24 @@
-// Services
-export { createActivities, getLeadActivities } from "./service";
-
-// Helpers
-export {
-  buildActivityContent,
-  buildLeadCreatedActivity,
-  buildLeadUpdatedActivity,
-  buildNoteActivity,
-  buildAssignmentActivity,
-  buildStatusStageActivities,
-  buildAiLeadBriefGeneratedActivity,
-} from "./helpers";
-
-// Schemas
-export {
+import { createActivities, getLeadActivities } from "./service";
+import {
   createCallAttemptSchema,
   createNoteSchema,
   getLeadActivitiesSchema,
-  callOutcomeEnum,
 } from "./schema";
 
-// Types
+export const ActivityService = {
+  create: createActivities,
+  getByLeadId: getLeadActivities,
+} as const;
+
+export const ActivitySchema = {
+  getByLeadId: getLeadActivitiesSchema,
+  createNote: createNoteSchema,
+  createCallAttempt: createCallAttemptSchema,
+} as const;
+
 export type {
+  CallOutcome,
   CreateActivityRequest,
   CreateCallAttemptRequest,
   CreateNoteRequest,
-  GetLeadActivitiesRequest,
-  ListLeadActivitiesResponseData,
-  CallOutcome,
 } from "./schema";

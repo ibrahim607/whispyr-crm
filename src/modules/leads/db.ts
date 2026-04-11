@@ -89,7 +89,6 @@ export async function dbCreateLead(
       name: data.name,
       phone: data.phone,
       email: data.email,
-      assignedToId: data.assignedToId,
     },
   });
 

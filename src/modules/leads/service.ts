@@ -1,15 +1,9 @@
-import { Prisma, Profile, Role } from "@/generated/prisma/client";
-import { CreateLeadRequest, EditLeadRequest, ListLeadsParams, UpdateAssignmentRequest, UpdateContactRequest } from "./schema";
-import { dbCreateLead, dbFindAssignableAgentById, dbGetLeadById, dbListLeads, dbUpdateLead } from "./db";
-import { canEditLeadAssignedAgent, canEditLeadContactFields } from "./permissions";
-import {
-  createActivities,
-  buildLeadCreatedActivity,
-  buildLeadUpdatedActivity,
-  buildNoteActivity,
-  buildAssignmentActivity,
-  buildStatusStageActivities,
-} from "../activity";
+import { ActivityType, Prisma, Profile, Role } from "@/generated/prisma/client";
+import { CreateLeadRequest, EditLeadRequest, ListLeadsParams } from "./schema";
+import { dbCreateLead, dbGetLeadById, dbListLeads, dbUpdateLead } from "./db";
+import { buildLeadChangeActivities } from "./helpers";
+import { canEditLeadAssignment, canEditLeadContactFields } from "./permissions";
+import { ActivityService } from "../activity";
 import { prisma } from "@/lib/prisma";
 
 export class LeadServiceError extends Error {
@@ -23,8 +17,13 @@ export class LeadServiceError extends Error {
 }
 
 export async function listLeads(profile: Profile, params: ListLeadsParams) {
+  // Build where clause
   const where: Prisma.LeadWhereInput = {};
 
+  // Role-scoping contract:
+  // - AGENT can only read assigned leads.
+  // - MANAGER/ADMIN can read all leads.
+  // UI-level bulk actions (checkboxes/reassign toolbar) should respect this scope.
   if (profile.role === Role.AGENT) {
     where.assignedToId = profile.id;
   }
@@ -35,20 +34,17 @@ export async function listLeads(profile: Profile, params: ListLeadsParams) {
 export async function createLead(profile: Profile, data: CreateLeadRequest) {
   const result = await prisma.$transaction(async (tx) => {
     const lead = await dbCreateLead(profile, data, tx);
-    const activities = [buildLeadCreatedActivity(lead.id, profile.id)];
+    await ActivityService.create(
+      [
+        {
+          leadId: lead.id,
+          actorId: profile.id,
+          type: ActivityType.LEAD_CREATED,
+        },
+      ],
+      tx,
+    );
 
-    if (data.note) {
-      activities.push(buildNoteActivity(lead.id, profile.id, data.note));
-    }
-
-    if (data.assignedToId) {
-      const agent = await dbFindAssignableAgentById(data.assignedToId);
-      if (agent) {
-        activities.push(buildAssignmentActivity(lead.id, profile.id, "None", agent.name));
-      }
-    }
-
-    await createActivities(activities, tx);
     return lead;
   });
 
@@ -84,52 +80,36 @@ export async function updateLead(
     throw new LeadServiceError("Unauthorized", 403);
   }
 
-  // --- status / stage update ---
-  if ("status" in data || "stage" in data) {
-    const activities = buildStatusStageActivities(id, profile.id, existingLead, data);
-
-    return prisma.$transaction(async (tx) => {
-      const updatedLead = await dbUpdateLead(id, data, tx);
-      await createActivities(activities, tx);
-      return updatedLead;
-    });
-  }
-
-  // --- assignment update ---
-  if ("assignedToId" in data) {
-    const assignmentData = data as UpdateAssignmentRequest;
-
-    if (!canEditLeadAssignedAgent(profile.role)) {
-      throw new LeadServiceError("Unauthorized", 403);
-    }
-
-    const newAgentId = assignmentData.assignedToId;
-    const agent = newAgentId ? await dbFindAssignableAgentById(newAgentId) : null;
-
-    return prisma.$transaction(async (tx) => {
-      const updatedLead = await dbUpdateLead(id, assignmentData, tx);
-      await createActivities([
-        buildAssignmentActivity(
-          id,
-          profile.id,
-          existingLead.assignedTo?.name ?? "None",
-          agent?.name ?? "None",
-        ),
-      ], tx);
-      return updatedLead;
-    });
-  }
-
-  // --- contact info update ---
-  const contactData = data as UpdateContactRequest;
-
-  if (!canEditLeadContactFields(profile.role, contactData)) {
+  if (profile.role === Role.AGENT && data.assignedToId !== undefined) {
     throw new LeadServiceError("Unauthorized", 403);
   }
 
-  return prisma.$transaction(async (tx) => {
-    const updatedLead = await dbUpdateLead(id, contactData, tx);
-    await createActivities([buildLeadUpdatedActivity(id, profile.id)], tx);
-    return updatedLead;
+  if (!canEditLeadContactFields(profile.role, data)) {
+    throw new LeadServiceError("Unauthorized", 403);
+  }
+
+  if (!canEditLeadAssignment(profile.role, data)) {
+    throw new LeadServiceError("Unauthorized", 403);
+  }
+
+  const activities = buildLeadChangeActivities({
+    leadId: id,
+    actorId: profile.id,
+    existingLead,
+    newLead: data,
   });
+
+  const result = await prisma.$transaction(async (tx) => {
+    const updatedLead = await dbUpdateLead(id, data, tx);
+    const activitiesCreated = await ActivityService.create(activities, tx);
+    if (!activitiesCreated.success)
+      throw new Error("Failed to create activities");
+
+    return {
+      lead: updatedLead,
+      activities: activitiesCreated.count,
+    };
+  });
+
+  return result;
 }

@@ -2,11 +2,15 @@ import { LeadServiceError } from "@/modules/leads/service";
 import { AuthenticationError } from "./autheticateUser";
 import { ZodError } from "zod";
 import { NextResponse } from "next/server";
+import { NotificationServiceError } from "@/modules/notification/service";
+import { AdminServiceError } from "@/modules/admin/service";
 
 export const handleRouteError = (error: unknown) => {
     if (
         error instanceof AuthenticationError ||
-        error instanceof LeadServiceError
+        error instanceof LeadServiceError ||
+        error instanceof NotificationServiceError ||
+        error instanceof AdminServiceError
     ) {
         return NextResponse.json(
             { error: error.message },

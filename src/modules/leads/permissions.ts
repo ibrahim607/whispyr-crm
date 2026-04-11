@@ -1,12 +1,9 @@
 import { Role } from "@/generated/prisma/client";
-import { UpdateContactRequest } from "@/modules/leads/schema";
+import { EditLeadRequest } from "@/modules/leads/schema";
 
-const contactFields: (keyof UpdateContactRequest)[] = ["name", "phone", "email"];
+const contactFields = ["name", "email", "phone"] as const;
 
-export function canEditLeadContactFields(
-  role: Role,
-  data: UpdateContactRequest,
-) {
+export function canEditLeadContactFields(role: Role, data: EditLeadRequest) {
   if (role !== Role.AGENT) {
     return true;
   }
@@ -14,6 +11,10 @@ export function canEditLeadContactFields(
   return !contactFields.some((field) => data[field] !== undefined);
 }
 
-export function canEditLeadAssignedAgent(role: Role) {
-  return role !== Role.AGENT;
+export function canEditLeadAssignment(role: Role, data: EditLeadRequest) {
+  if (role !== Role.AGENT) {
+    return true;
+  }
+
+  return data.assignedToId === undefined;
 }

@@ -12,9 +12,8 @@ export type ListLeadsParams = z.infer<typeof listLeadsQuerySchema>;
 export const createLeadSchema = z.object({
   name: z.string().min(1),
   phone: z.string().min(8).max(15),
-  email: z.string().email(),
+  email: z.email(),
   note: z.string().optional(),
-  assignedToId: z.string().uuid().optional(),
 });
 
 export type CreateLeadRequest = z.infer<typeof createLeadSchema>;
@@ -25,34 +24,16 @@ export const leadIdParamsSchema = z.object({
 
 export type LeadIdParams = z.infer<typeof leadIdParamsSchema>;
 
-export const updateContactSchema = z.object({
-  name: z.string().min(1),
-  phone: z.string().min(1).max(15),
-  email: z.string().email(),
-});
-
-export type UpdateContactRequest = z.infer<typeof updateContactSchema>;
-
-export const updateAssignmentSchema = z.object({
-  assignedToId: z.string().uuid().nullable(),
-});
-
-export type UpdateAssignmentRequest = z.infer<typeof updateAssignmentSchema>;
-
-export const updateStatusStageSchema = z.object({
-  status: z.nativeEnum(LeadStatus).optional(),
+export const editLeadSchema = z.object({
+  name: z.string().min(1).optional(),
+  phone: z.string().min(8).max(15).optional(),
+  email: z.email().optional(),
   stage: z.nativeEnum(LeadStage).optional(),
-}).refine(
-  (data) => data.status !== undefined || data.stage !== undefined,
-  { message: "At least one of status or stage must be provided" },
-);
+  status: z.nativeEnum(LeadStatus).optional(),
+  assignedToId: z.uuid().optional(),
+});
 
-export type UpdateStatusStageRequest = z.infer<typeof updateStatusStageSchema>;
-
-// Union of all valid PATCH shapes
-export const editLeadSchema = z.union([updateContactSchema, updateStatusStageSchema, updateAssignmentSchema]);
-
-export type EditLeadRequest = UpdateContactRequest | UpdateStatusStageRequest | UpdateAssignmentRequest;
+export type EditLeadRequest = z.infer<typeof editLeadSchema>;
 
 export interface LeadAssigneeSummary {
   id: string;
