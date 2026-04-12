@@ -219,3 +219,32 @@ export const cancelReminder = async (
 
     return dbUpdateReminderStatus(reminderId, "CANCELLED");
 };
+
+export const completeReminder = async (
+    reminderId: string,
+    userSnapshot: UserSnapshot,
+) => {
+    const reminder = await dbGetReminderById(reminderId);
+    if (!reminder) {
+        throw new Error("Reminder not found");
+    }
+
+    if (reminder.status !== "PENDING" && reminder.status !== "FIRED") {
+        throw new Error("Only pending or fired reminders can be completed");
+    }
+
+    if (!(await validateLeadAccess(reminder.assignedToId, userSnapshot))) {
+        throw new AuthenticationError("You are not authorized to complete this reminder", 403);
+    }
+
+    // Cancel the QStash message if it's still pending
+    if (reminder.status === "PENDING" && reminder.qstashMessageId) {
+        try {
+            await qstash.messages.delete(reminder.qstashMessageId);
+        } catch {
+            // QStash message may have already been delivered or expired
+        }
+    }
+
+    return dbUpdateReminderStatus(reminderId, "COMPLETED");
+};

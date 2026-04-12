@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useCancelReminder, useGetMyReminders } from "@/lib/tanstack/useReminders";
+import { useCancelReminder, useCompleteReminder, useGetMyReminders } from "@/lib/tanstack/useReminders";
 import { format } from "date-fns";
 import Link from "next/link";
 import { useState } from "react";
@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 type FilterTab = "all" | "upcoming" | "overdue" | "completed" | "cancelled";
 
 function getReminderDisplayStatus(status: string, dueAt: string | Date) {
-  if (status === "FIRED") return "completed";
+  if (status === "FIRED" || status === "COMPLETED") return "completed";
   if (status === "CANCELLED") return "cancelled";
   if (status === "PENDING" && new Date(dueAt) < new Date()) return "overdue";
   return "upcoming";
@@ -50,7 +50,7 @@ function ReminderStatusBadge({ status, dueAt }: { status: string; dueAt: string 
 function getApiStatusForTab(tab: FilterTab): string | undefined {
   switch (tab) {
     case "completed":
-      return "FIRED";
+      return "COMPLETED";
     case "cancelled":
       return "CANCELLED";
     default:
@@ -91,6 +91,7 @@ export function RemindersPageClient({ profile, agents }: { profile: Profile, age
   });
 
   const cancelReminder = useCancelReminder();
+  const completeReminder = useCompleteReminder();
 
   const total = data?.pagination.total ?? 0;
   const pageCount = data?.pagination.pages ?? 0;
@@ -214,8 +215,17 @@ export function RemindersPageClient({ profile, agents }: { profile: Profile, age
                       <ReminderStatusBadge status={reminder.status} dueAt={reminder.dueAt} />
                     </TableCell>
                     <TableCell className="text-right">
-                      {isPending && (
+                      {(isPending || reminder.status === "FIRED") && (
                         <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs text-green-600 bg-green-50 hover:bg-green-100 border-green-200 cursor-pointer"
+                            onClick={() => completeReminder.mutate(reminder.id)}
+                            disabled={completeReminder.isPending}
+                          >
+                            Complete
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
