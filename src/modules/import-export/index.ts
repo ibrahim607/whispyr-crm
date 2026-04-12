@@ -1,10 +1,13 @@
 import { csvLeadRowSchema, importRequestSchema } from "./schema";
-import { processImport } from "./service";
+import { processImport, exportLeads } from "./service";
 
 export const ImportExportService = {
     import: {
         process: processImport,
     },
+    export: {
+        leads: exportLeads,
+    }
 };
 
 export const ImportExportSchema = {

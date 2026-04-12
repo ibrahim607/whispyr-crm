@@ -14,7 +14,7 @@ import {
 } from "@/components/topbar-config";
 import { NotificationBell } from "./notification-icon";
 
-export function TopBar({
+export function AppShell({
     role,
     email,
     children,
@@ -45,10 +45,8 @@ export function TopBar({
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <p className="hidden text-sm text-slate-500 md:block">{email}</p>
-                    <NotificationBell />
-                </div>
+                <p className="hidden text-sm text-slate-500 md:block">{email}</p>
+                <NotificationBell />
             </header>
 
             <div className="flex flex-1 flex-col">{children}</div>

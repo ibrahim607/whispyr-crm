@@ -1,7 +1,8 @@
 import { Profile } from "@/generated/prisma/client";
 import { LeadService } from "../leads";
-import { dbFindProfileByEmail } from "./db";
+import { dbFindProfileByEmail, dbGetAllLeads } from "./db";
 import { CSVLeadRow, ImportSummary } from "./schema";
+import { unparseCSV } from "./helpers";
 
 export async function processImport(
     rows: CSVLeadRow[],
@@ -59,4 +60,22 @@ export async function processImport(
         totalProcessed: rows.length,
         errors,
     };
+}
+
+export async function exportLeads(): Promise<string> {
+    const leads = await dbGetAllLeads();
+    
+    const csvData = leads.map(lead => ({
+        id: lead.id,
+        name: lead.name,
+        phone: lead.phone,
+        email: lead.email,
+        stage: lead.stage,
+        status: lead.status,
+        assigneeName: lead.assignedTo?.name ?? "",
+        assigneeEmail: lead.assignedTo?.email ?? "",
+        createdAt: lead.createdAt.toISOString()
+    }));
+
+    return unparseCSV(csvData, ["id", "name", "phone", "email", "stage", "status", "assigneeName", "assigneeEmail", "createdAt"]);
 }

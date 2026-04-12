@@ -14,6 +14,7 @@ export const createLeadSchema = z.object({
   phone: z.string().min(8).max(15),
   email: z.email(),
   note: z.string().optional(),
+  assignedToId: z.uuid().optional(),
 });
 
 export type CreateLeadRequest = z.infer<typeof createLeadSchema>;

@@ -3,8 +3,6 @@
 import { useUsers } from "@/lib/tanstack/useUsers"
 import { Button } from "../ui/button"
 import { useState } from "react"
-import { Upload } from "lucide-react"
-import Link from "next/link"
 import UsersTable from "./UsersTable"
 import { CreateUserDialog } from "./create-user-dialog"
 
@@ -22,15 +20,7 @@ const UsersPageClient = () => {
                     <h1 className="text-2xl font-bold">Users</h1>
                     <p className="text-sm text-muted-foreground">Manage your users and their roles.</p>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" asChild>
-                        <Link href="/admin/import">
-                            <Upload className="mr-2 h-4 w-4" />
-                            Import CSV
-                        </Link>
-                    </Button>
-                    <Button onClick={() => setIsCreateUserDialogOpen(true)}>+ Create User</Button>
-                </div>
+                <Button onClick={() => setIsCreateUserDialogOpen(true)}>+ Create User</Button>
             </div>
             <div>
                 <UsersTable

@@ -14,3 +14,15 @@ export const useImport = () => {
         },
     });
 };
+
+// ------------------------------------------------------------------
+// EXPORT LEADS (Mutation)
+// ------------------------------------------------------------------
+export const useExportLeads = () => {
+    return useMutation({
+        mutationFn: async (): Promise<string> => {
+            const { data } = await api.get(`/admin/export`);
+            return data;
+        },
+    });
+};
