@@ -9,14 +9,14 @@ import { AdminSchema, AdminService } from "@/modules/admin";
 // ------------------------------------------------------------------
 export async function GET(request: NextRequest) {
     try {
-        // Only admins can see the user list.
-        // If a non-admin calls this, authenticateUser throws a 403.
-        await authenticateUser([Role.ADMIN]);
+        // Allow managers to list users so they can assign leads
+        await authenticateUser([Role.ADMIN, Role.MANAGER]);
 
         const searchParams = request.nextUrl.searchParams;
         const params = AdminSchema.user.listPaginated.parse({
             page: searchParams.get("page"),
             pageSize: searchParams.get("pageSize"),
+            search: searchParams.get("search") || undefined,
         });
 
         const data = await AdminService.user.list(params);

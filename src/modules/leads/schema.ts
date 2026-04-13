@@ -62,3 +62,22 @@ export interface ListLeadsResponseData {
   leads: LeadSummary[];
   pagination: PaginationMeta;
 }
+
+export const bulkLeadActionSchema = z.object({
+  leadIds: z.array(z.string().uuid()).min(1),
+});
+
+export type BulkLeadActionRequest = z.infer<typeof bulkLeadActionSchema>;
+
+export const bulkUpdateLeadsSchema = bulkLeadActionSchema.extend({
+  stage: z.nativeEnum(LeadStage).optional(),
+  status: z.nativeEnum(LeadStatus).optional(),
+});
+
+export type BulkUpdateLeadsRequest = z.infer<typeof bulkUpdateLeadsSchema>;
+
+export const bulkReassignLeadsSchema = bulkLeadActionSchema.extend({
+  assignedToId: z.string().uuid(),
+});
+
+export type BulkReassignLeadsRequest = z.infer<typeof bulkReassignLeadsSchema>;

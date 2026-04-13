@@ -30,9 +30,14 @@ export async function dbFindUserById(id: string) {
     });
 }
 
-export async function dbListAllUsers(params: { page: number; pageSize: number }) {
+export async function dbListAllUsers(params: { page: number; pageSize: number; search?: string }) {
+    const whereClause = params.search
+        ? { name: { contains: params.search, mode: "insensitive" as const } }
+        : {};
+
     const [users, total] = await Promise.all([
         prisma.profile.findMany({
+            where: whereClause,
             orderBy: { createdAt: "desc" },
             take: params.pageSize,
             skip: (params.page - 1) * params.pageSize,
@@ -45,7 +50,7 @@ export async function dbListAllUsers(params: { page: number; pageSize: number })
                 createdAt: true,
             },
         }),
-        prisma.profile.count(),
+        prisma.profile.count({ where: whereClause }),
     ]);
 
     return { users, total };

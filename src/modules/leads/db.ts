@@ -109,3 +109,41 @@ export async function dbUpdateLead(
 
   return updatedLead;
 }
+
+export async function dbBulkDeleteLeads(ids: string[], tx?: Prisma.TransactionClient) {
+  const client = tx ?? prisma;
+  
+  await client.activity.deleteMany({ where: { leadId: { in: ids } } });
+  await client.reminder.deleteMany({ where: { leadId: { in: ids } } });
+  await client.notification.deleteMany({ where: { leadId: { in: ids } } });
+  await client.aILeadBrief.deleteMany({ where: { leadId: { in: ids } } });
+  await client.attachment.deleteMany({ where: { leadId: { in: ids } } });
+
+  return client.lead.deleteMany({
+    where: { id: { in: ids } },
+  });
+}
+
+export async function dbBulkReassignLeads(
+  ids: string[],
+  assignedToId: string,
+  tx?: Prisma.TransactionClient
+) {
+  const client = tx ?? prisma;
+  return client.lead.updateMany({
+    where: { id: { in: ids } },
+    data: { assignedToId },
+  });
+}
+
+export async function dbBulkUpdateLeads(
+  ids: string[],
+  data: { stage?: import("@/generated/prisma/enums").LeadStage; status?: import("@/generated/prisma/enums").LeadStatus },
+  tx?: Prisma.TransactionClient
+) {
+  const client = tx ?? prisma;
+  return client.lead.updateMany({
+    where: { id: { in: ids } },
+    data,
+  });
+}

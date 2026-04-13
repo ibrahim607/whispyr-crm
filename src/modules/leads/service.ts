@@ -1,10 +1,10 @@
 import { ActivityType, Prisma, Profile, Role } from "@/generated/prisma/client";
-import { CreateLeadRequest, EditLeadRequest, ListLeadsParams } from "./schema";
-import { dbCreateLead, dbGetLeadById, dbListLeads, dbUpdateLead } from "./db";
-import { buildLeadChangeActivities } from "./helpers";
+import { BulkLeadActionRequest, BulkReassignLeadsRequest, BulkUpdateLeadsRequest, CreateLeadRequest, EditLeadRequest, ListLeadsParams } from "./schema";
+import { dbBulkDeleteLeads, dbBulkReassignLeads, dbBulkUpdateLeads, dbCreateLead, dbGetLeadById, dbListLeads, dbUpdateLead } from "./db";
 import { canEditLeadAssignment, canEditLeadContactFields } from "./permissions";
 import { ActivityService } from "../activity";
 import { prisma } from "@/lib/prisma";
+import { buildAssignmentActivity, buildStatusStageActivities, buildLeadUpdatedActivity } from "../activity/helpers";
 
 export class LeadServiceError extends Error {
   constructor(
@@ -92,12 +92,31 @@ export async function updateLead(
     throw new LeadServiceError("Unauthorized", 403);
   }
 
-  const activities = buildLeadChangeActivities({
-    leadId: id,
-    actorId: profile.id,
-    existingLead,
-    newLead: data,
-  });
+  const activities: any[] = [];
+  
+  activities.push(...buildStatusStageActivities(id, profile.id, existingLead, data));
+
+  if (data.assignedToId && data.assignedToId !== existingLead.assignedToId) {
+      // Find the new assignee profile name
+      const newAssignee = await prisma.profile.findUnique({ where: { id: data.assignedToId } });
+      activities.push(
+          buildAssignmentActivity(
+              id,
+              profile.id,
+              existingLead.assignedTo?.name ?? "Unassigned",
+              newAssignee?.name ?? "Unassigned"
+          )
+      );
+  }
+
+  // Check if contact fields changed
+  if (
+      (data.name && data.name !== existingLead.name) ||
+      (data.email && data.email !== existingLead.email) ||
+      (data.phone && data.phone !== existingLead.phone)
+  ) {
+      activities.push(buildLeadUpdatedActivity(id, profile.id));
+  }
 
   const result = await prisma.$transaction(async (tx) => {
     const updatedLead = await dbUpdateLead(id, data, tx);
@@ -109,6 +128,98 @@ export async function updateLead(
       lead: updatedLead,
       activities: activitiesCreated.count,
     };
+  });
+
+  return result;
+}
+
+export async function handleBulkDelete(profile: Profile, params: BulkLeadActionRequest) {
+  // STRICT Constraint: Only Admins/Managers can bulk delete leads.
+  if (profile.role === Role.AGENT) {
+    throw new LeadServiceError("Agents are not authorized to bulk delete leads.", 403);
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    // Activities auto-delete through Cascade relationship constraints on Prisma
+    return dbBulkDeleteLeads(params.leadIds, tx);
+  });
+
+  return result;
+}
+
+export async function handleBulkReassign(profile: Profile, params: BulkReassignLeadsRequest) {
+  // STRICT Constraint: Only Admins/Managers can bulk reassign leads.
+  if (profile.role === Role.AGENT) {
+    throw new LeadServiceError("Agents are not authorized to bulk reassign leads.", 403);
+  }
+
+  const newAssignee = await prisma.profile.findUnique({
+    where: { id: params.assignedToId },
+  });
+
+  if (!newAssignee) {
+    throw new LeadServiceError("Assignee not found", 404);
+  }
+
+  const existingLeads = await prisma.lead.findMany({
+    where: { id: { in: params.leadIds } },
+    include: { assignedTo: true }
+  });
+
+  const activities = existingLeads.flatMap((existingLead) =>
+    buildAssignmentActivity(
+      existingLead.id,
+      profile.id,
+      existingLead.assignedTo?.name ?? "Unassigned",
+      newAssignee.name
+    )
+  );
+
+  const result = await prisma.$transaction(async (tx) => {
+    const updated = await dbBulkReassignLeads(params.leadIds, params.assignedToId, tx);
+    await ActivityService.create(activities, tx);
+    return updated;
+  });
+
+  return result;
+}
+
+export async function handleBulkUpdate(profile: Profile, params: BulkUpdateLeadsRequest) {
+  // If agent, ensure they own every lead being updated
+  if (profile.role === Role.AGENT) {
+    const ownedCount = await prisma.lead.count({
+      where: {
+        id: { in: params.leadIds },
+        assignedToId: profile.id,
+      },
+    });
+
+    if (ownedCount !== params.leadIds.length) {
+      throw new LeadServiceError("Unauthorized. One or more leads do not belong to you.", 403);
+    }
+  }
+
+  const existingLeads = await prisma.lead.findMany({
+    where: { id: { in: params.leadIds } },
+  });
+
+  const activities = existingLeads.flatMap((existingLead) =>
+    buildStatusStageActivities(
+      existingLead.id,
+      profile.id,
+      existingLead,
+      params
+    )
+  );
+
+  const result = await prisma.$transaction(async (tx) => {
+    const updated = await dbBulkUpdateLeads(
+      params.leadIds,
+      { stage: params.stage, status: params.status },
+      tx
+    );
+    await ActivityService.create(activities, tx);
+    return updated;
   });
 
   return result;

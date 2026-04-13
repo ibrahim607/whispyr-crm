@@ -5,6 +5,9 @@ import {
     LeadDetail,
     ListLeadsParams,
     ListLeadsResponseData,
+    BulkLeadActionRequest,
+    BulkReassignLeadsRequest,
+    BulkUpdateLeadsRequest,
 } from "@/modules/leads/schema";
 
 export const leadService = {
@@ -25,6 +28,21 @@ export const leadService = {
 
     async editLead(id: string, payload: EditLeadRequest): Promise<LeadDetail> {
         const { data } = await api.patch(`/leads/${id}`, payload);
+        return data.data;
+    },
+
+    async bulkDelete(payload: BulkLeadActionRequest): Promise<any> {
+        const { data } = await api.post("/leads/bulk-delete", payload);
+        return data.data;
+    },
+
+    async bulkReassign(payload: BulkReassignLeadsRequest): Promise<any> {
+        const { data } = await api.post("/leads/bulk-reassign", payload);
+        return data.data;
+    },
+
+    async bulkUpdate(payload: BulkUpdateLeadsRequest): Promise<any> {
+        const { data } = await api.post("/leads/bulk-update", payload);
         return data.data;
     },
 };

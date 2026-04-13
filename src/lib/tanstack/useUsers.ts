@@ -21,12 +21,12 @@ export interface UsersResponse {
 // ------------------------------------------------------------------
 // LIST USERS (Query — paginated)
 // ------------------------------------------------------------------
-export function useUsers(params: { page: number; pageSize: number } = { page: 1, pageSize: 10 }) {
+export function useUsers(params: { page: number; pageSize: number; search?: string } = { page: 1, pageSize: 10 }) {
     return useQuery<UsersResponse>({
-        queryKey: ["admin", "users", params.page, params.pageSize],
+        queryKey: ["admin", "users", params.page, params.pageSize, params.search],
         queryFn: async () => {
             const { data } = await api.get("/admin/users", {
-                params: { page: params.page, pageSize: params.pageSize },
+                params: { page: params.page, pageSize: params.pageSize, search: params.search },
             });
             return data.data;
         },

@@ -7,7 +7,7 @@ import KpiCard from "./KpiCard";
 import { Role } from "@/generated/prisma/enums";
 import { cn } from "@/lib/utils";
 import ByStageBreakdown from "./ByStageBreakdown";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import TopAgentsCard from "./TopAgentsCard";
 
 
 function formatWeekOverWeekSubtext(
@@ -75,21 +75,9 @@ export function DashboardPageClient({ role }: { role: Role }) {
                 />
             </div>
 
-            <div className={cn("grid gap-4", secondRowGridStyle)}>
+            <div className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3", secondRowGridStyle)}>
                 <ByStageBreakdown data={data.totalLeadsByStage} />
-                {data.topAgents ? (<Card>
-                    <CardHeader>
-                        <CardTitle>Top Performing Agents</CardTitle>
-                        <CardContent>
-                            {data.topAgents.map((agent) => (
-                                <div key={agent.id} className="flex flex-col gap-1">
-                                    <p className="text-sm font-medium">{agent.name}</p>
-                                    <p className="text-xs text-muted-foreground">Won {agent.wonCount} of {agent.leadsCount} leads</p>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </CardHeader>
-                </Card>) : <></>}
+                {data.topAgents ? <TopAgentsCard topAgents={data.topAgents} /> : null}
             </div>
         </div>
     );

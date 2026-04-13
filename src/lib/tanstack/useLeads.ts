@@ -3,7 +3,10 @@ import { leadService } from "@/services/leadsService";
 import {
     CreateLeadRequest,
     EditLeadRequest,
-    ListLeadsParams
+    ListLeadsParams,
+    BulkLeadActionRequest,
+    BulkReassignLeadsRequest,
+    BulkUpdateLeadsRequest,
 } from "@/modules/leads/schema";
 
 export function useGetLeads(params: ListLeadsParams) {
@@ -43,6 +46,39 @@ export function useEditLead(id: string) {
             queryClient.invalidateQueries({
                 queryKey: ["activities", { leadId: id }],
             });
+        },
+    });
+}
+
+export function useBulkDeleteLeads() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: BulkLeadActionRequest) => leadService.bulkDelete(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["leads"] });
+        },
+    });
+}
+
+export function useBulkReassignLeads() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: BulkReassignLeadsRequest) => leadService.bulkReassign(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["leads"] });
+        },
+    });
+}
+
+export function useBulkUpdateLeads() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: BulkUpdateLeadsRequest) => leadService.bulkUpdate(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["leads"] });
         },
     });
 }

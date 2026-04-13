@@ -1,19 +1,8 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useCancelReminder, useCompleteReminder, useGetMyReminders } from "@/lib/tanstack/useReminders";
-import { format } from "date-fns";
-import Link from "next/link";
+import { useGetMyReminders } from "@/lib/tanstack/useReminders";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Pagination } from "@/components/leads/reusable";
@@ -25,29 +14,8 @@ import { Spinner } from "@/components/ui/spinner";
 
 type FilterTab = "all" | "upcoming" | "overdue" | "completed" | "cancelled";
 
-function getReminderDisplayStatus(status: string, dueAt: string | Date) {
-  if (status === "FIRED" || status === "COMPLETED") return "completed";
-  if (status === "CANCELLED") return "cancelled";
-  if (status === "PENDING" && new Date(dueAt) < new Date()) return "overdue";
-  return "upcoming";
-}
-
-function ReminderStatusBadge({ status, dueAt }: { status: string; dueAt: string | Date }) {
-  const display = getReminderDisplayStatus(status, dueAt);
-  const variantMap: Record<string, "info" | "destructive" | "success" | "outline"> = {
-    upcoming: "info",
-    overdue: "destructive",
-    completed: "success",
-    cancelled: "outline",
-  };
-  const labelMap: Record<string, string> = {
-    upcoming: "Upcoming",
-    overdue: "Overdue",
-    completed: "Completed",
-    cancelled: "Cancelled",
-  };
-  return <Badge variant={variantMap[display]}>{labelMap[display]}</Badge>;
-}
+import { ReminderCard } from "./ReminderCard";
+import { CalendarX, Filter } from "lucide-react";
 
 function getApiStatusForTab(tab: FilterTab): string | undefined {
   switch (tab) {
@@ -92,8 +60,7 @@ export function RemindersPageClient({ profile, agents }: { profile: Profile, age
     return true;
   });
 
-  const cancelReminder = useCancelReminder();
-  const completeReminder = useCompleteReminder();
+
 
   const total = data?.pagination.total ?? 0;
   const pageCount = data?.pagination.pages ?? 0;
@@ -122,46 +89,74 @@ export function RemindersPageClient({ profile, agents }: { profile: Profile, age
   }
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+    <div className="space-y-6 w-full h-[calc(100vh-70px)] flex flex-col p-4 md:p-8 bg-slate-50">
+      <div className="space-y-2">
+        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
           My Reminders
         </h1>
-        <p className="text-sm text-slate-500">
+        <p className="text-base font-medium text-slate-500">
           Keep follow-ups visible so nothing slips between conversations.
         </p>
       </div>
-      <div className="flex items-center justify-between flex-row">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
+        <div className="flex items-center gap-2.5 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto scrollbar-hide">
+            {[
+              { id: "all", label: "All" },
+              { id: "upcoming", label: "Upcoming" },
+              { id: "overdue", label: "Overdue", count: overdueCount },
+              { id: "completed", label: "Completed" },
+              { id: "cancelled", label: "Cancelled" },
+            ].map((tab) => {
+              const isActive = activeTab === tab.id;
+              
+              let activeColorBg = "bg-slate-800 text-white shadow-md ring-2 ring-slate-800/20";
+              if (tab.id === 'overdue') activeColorBg = "bg-red-500 text-white shadow-md ring-2 ring-red-500/30";
+              if (tab.id === 'completed') activeColorBg = "bg-emerald-500 text-white shadow-md ring-2 ring-emerald-500/30";
+              if (tab.id === 'upcoming') activeColorBg = "bg-blue-600 text-white shadow-md ring-2 ring-blue-600/30";
 
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            <TabsTrigger value="overdue" className="gap-1.5">
-              Overdue
-              {overdueCount > 0 && (
-                <Badge variant="destructive" className="ml-1 h-5 min-w-5 rounded-full px-1.5 text-[10px]">
-                  {overdueCount}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-            <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-          </TabsList>
-        </Tabs>
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={cn(
+                    "flex items-center whitespace-nowrap gap-1.5 px-3.5 py-1.5 m-0.5 md:m-1 rounded-full font-bold text-[13px] transition-all duration-300 outline-none cursor-pointer",
+                    isActive 
+                      ? activeColorBg 
+                      : "bg-white text-slate-500 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 hover:-translate-y-0.5 shadow-sm"
+                  )}
+                >
+                  {tab.label}
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <span 
+                      className={cn(
+                        "flex items-center justify-center w-4 h-4 text-[9px] rounded-full",
+                        isActive ? "bg-white text-red-600 font-extrabold" : "bg-red-500 text-white font-extrabold"
+                      )}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+        </div>
+
         {isAdminOrManager && (
-          <div className="w-[250px]">
+          <div className="flex items-center gap-2 w-full md:w-auto md:min-w-[280px]">
+            <div className="bg-slate-100 p-2.5 rounded-xl border border-slate-200 text-slate-500 shadow-sm shrink-0">
+               <Filter className="w-4 h-4" />
+            </div>
             <Select
               value={selectedAgentId}
               onValueChange={handleAgentChange}
             >
-              <SelectTrigger className="w-full bg-white">
-                <SelectValue placeholder="Filter by agent…" />
+              <SelectTrigger className="w-full bg-slate-50 border-slate-200 rounded-xl shadow-none font-semibold hover:bg-slate-100 transition-colors focus:ring-blue-500 focus:ring-offset-1 h-10">
+                <SelectValue placeholder="All Agents" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Agents</SelectItem>
+              <SelectContent className="rounded-xl border-slate-200 shadow-md">
+                <SelectItem value="all" className="font-semibold cursor-pointer py-2">All Agents</SelectItem>
                 {agents.map((agent) => (
-                  <SelectItem key={agent.id} value={agent.id}>
+                  <SelectItem key={agent.id} value={agent.id} className="cursor-pointer py-2 font-medium">
                     {agent.name}
                   </SelectItem>
                 ))}
@@ -172,97 +167,38 @@ export function RemindersPageClient({ profile, agents }: { profile: Profile, age
       </div>
 
       {isLoading ? (
-        <div className="py-12 flex justify-center"><Spinner /></div>
+        <div className="py-24 flex justify-center w-full"><Spinner className="w-8 h-8 text-blue-600" /></div>
       ) : isError ? (
-        <div className="py-12 text-center text-sm text-destructive">Failed to load reminders.</div>
+        <div className="py-12 text-center text-sm font-semibold text-red-600 bg-red-50 rounded-2xl border-2 border-red-100">Failed to load reminders. Please try again.</div>
       ) : reminders.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-white/80 p-8 text-center text-sm text-slate-500">
-          No reminders found.
+        <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-white p-16 shadow-sm">
+          <div className="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <CalendarX className="w-8 h-8 text-slate-400" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-700">Inbox Zero!</h3>
+          <p className="text-sm text-slate-500 mt-1 max-w-[250px] text-center">There are no reminders matching your current filter. Enjoy your day!</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50/70">
-                <TableHead className="w-[160px]">Due Date</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Lead</TableHead>
-                <TableHead className="w-[120px]">Status</TableHead>
-                <TableHead className="w-[160px] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reminders.map((reminder) => {
-                const displayStatus = getReminderDisplayStatus(reminder.status, reminder.dueAt);
-                const isPending = reminder.status === "PENDING";
-                const isOverdue = displayStatus === "overdue";
-
-                return (
-                  <TableRow key={reminder.id} className={isOverdue ? "bg-red-50/50" : ""}>
-                    <TableCell className={`text-sm ${isOverdue ? "text-red-600 font-medium" : "text-slate-700"}`}>
-                      {format(new Date(reminder.dueAt), "MMM d, h:mm a")}
-                    </TableCell>
-                    <TableCell className="text-sm font-medium text-slate-900">
-                      {reminder.title}
-                    </TableCell>
-                    <TableCell>
-                      <Link
-                        href={`/leads/leadInfo?id=${reminder.lead.id}`}
-                        className="text-sm text-blue-600 hover:underline"
-                      >
-                        {reminder.lead.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <ReminderStatusBadge status={reminder.status} dueAt={reminder.dueAt} />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {(isPending || reminder.status === "FIRED") && (
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-xs text-green-600 bg-green-50 hover:bg-green-100 border-green-200 cursor-pointer"
-                            onClick={() => completeReminder.mutate(reminder.id, {
-                              onSuccess: () => toast.success("Reminder completed!"),
-                              onError: (err) => toast.error(err.message || "Failed to complete reminder")
-                            })}
-                            disabled={completeReminder.isPending}
-                          >
-                            Complete
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-xs text-red-600 bg-red-50 hover:bg-red-100 border-red-200 cursor-pointer"
-                            onClick={() => cancelReminder.mutate(reminder.id, {
-                              onSuccess: () => toast.success("Reminder cancelled!"),
-                              onError: (err) => toast.error(err.message || "Failed to cancel reminder")
-                            })}
-                            disabled={cancelReminder.isPending}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+        <div className="flex flex-col w-full h-full pb-20">
+          <div className="flex flex-col gap-4 mb-6">
+              {reminders.map((reminder) => (
+                  <ReminderCard key={reminder.id} reminder={reminder} />
+              ))}
+          </div>
 
           {total > pageSize && (
-            <Pagination
-              startItem={startItem}
-              endItem={endItem}
-              total={total}
-              page={page}
-              pageCount={pageCount}
-              isLoading={isLoading}
-              setPage={setPage}
-              itemLabel="reminders"
-            />
+            <div className="bg-white border-2 border-slate-200 rounded-2xl p-2 shadow-sm shrink-0">
+                <Pagination
+                startItem={startItem}
+                endItem={endItem}
+                total={total}
+                page={page}
+                pageCount={pageCount}
+                isLoading={isLoading}
+                setPage={setPage}
+                itemLabel="reminders"
+                />
+            </div>
           )}
         </div>
       )}
