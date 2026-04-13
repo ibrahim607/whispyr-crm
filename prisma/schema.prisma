@@ -23,14 +23,15 @@ model Profile {
 
   isActive Boolean @default(true)
 
-  leads      Lead[]
-  activities Activity[]
-
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  leads         Lead[]
+  activities    Activity[]
   reminders     Reminder[]
   notifications Notification[]
   aileadBriefs  AILeadBrief[]
+  attachments   Attachment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {
@@ -52,13 +53,14 @@ model Lead {
   assignedToId String?
   assignedTo   Profile? @relation(fields: [assignedToId], references: [id])
 
-  activities Activity[]
-
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  activities    Activity[]
   reminders     Reminder[]
   notifications Notification[]
   aileadBriefs  AILeadBrief[]
+  attachments   Attachment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum LeadStatus {
@@ -92,6 +94,7 @@ model Activity {
 enum ActivityType {
   LEAD_CREATED
   NOTE
+  LEAD_UPDATED
   CALL_ATTEMPT
   STATUS_CHANGE
   STAGE_CHANGE
@@ -100,41 +103,29 @@ enum ActivityType {
   ATTACHMENT_ADDED
   AI_LEAD_BRIEF_GENERATED
   AI_FOLLOWUP_DRAFT_GENERATED
-  LEAD_UPDATED
 }
 
-model Notification {
-  id          String                @id @default(uuid())
-  recipientId String
-  recipient   Profile               @relation(fields: [recipientId], references: [id])
-  leadId      String?
-  lead        Lead?                 @relation(fields: [leadId], references: [id])
-  title       String
-  body        String
-  readAt      DateTime?
-  readState   NotificationReadState @default(UNREAD)
-  createdAt   DateTime              @default(now())
-}
-
-enum NotificationReadState {
-  UNREAD
-  READ
-}
-
+// Reminders
 model Reminder {
-  id              String         @id @default(uuid())
-  leadId          String
-  lead            Lead           @relation(fields: [leadId], references: [id])
-  assignedToId    String
-  assignedTo      Profile        @relation(fields: [assignedToId], references: [id])
-  title           String
-  note            String?
-  dueAt           DateTime
-  status          ReminderStatus @default(PENDING)
-  firedAt         DateTime?
+  id String @id @default(uuid())
+
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id])
+
+  assignedToId String
+  assignedTo   Profile @relation(fields: [assignedToId], references: [id])
+
+  title String
+  note  String?
+
+  dueAt   DateTime
+  status  ReminderStatus @default(PENDING)
+  firedAt DateTime?
+
   qstashMessageId String?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum ReminderStatus {
@@ -142,6 +133,30 @@ enum ReminderStatus {
   FIRED
   CANCELLED
   COMPLETED
+}
+
+// Notifications
+model Notification {
+  id String @id @default(uuid())
+
+  recipientId String
+  recipient   Profile @relation(fields: [recipientId], references: [id])
+
+  leadId String?
+  lead   Lead?   @relation(fields: [leadId], references: [id])
+
+  title String
+  body  String
+
+  readAt    DateTime?
+  readState NotificationReadState @default(UNREAD)
+
+  createdAt DateTime @default(now())
+}
+
+enum NotificationReadState {
+  UNREAD
+  READ
 }
 
 model AILeadBrief {
@@ -157,4 +172,21 @@ model AILeadBrief {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Attachment {
+  id String @id @default(uuid())
+
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id])
+
+  uploadedById String
+  uploadedBy   Profile @relation(fields: [uploadedById], references: [id])
+
+  fileName    String
+  storagePath String @unique
+  mimeType    String
+  sizeBytes   Int
+
+  createdAt DateTime @default(now())
 }

@@ -20,6 +20,8 @@ import { Pagination } from "@/components/leads/reusable";
 import { Profile } from "@/generated/prisma/client";
 import { AgentSummary } from "../leads/lead-card/LeadInfoClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 type FilterTab = "all" | "upcoming" | "overdue" | "completed" | "cancelled";
 
@@ -170,7 +172,7 @@ export function RemindersPageClient({ profile, agents }: { profile: Profile, age
       </div>
 
       {isLoading ? (
-        <div className="py-12 text-center text-sm text-slate-500">Loading reminders...</div>
+        <div className="py-12 flex justify-center"><Spinner /></div>
       ) : isError ? (
         <div className="py-12 text-center text-sm text-destructive">Failed to load reminders.</div>
       ) : reminders.length === 0 ? (
@@ -221,7 +223,10 @@ export function RemindersPageClient({ profile, agents }: { profile: Profile, age
                             variant="outline"
                             size="sm"
                             className="h-7 text-xs text-green-600 bg-green-50 hover:bg-green-100 border-green-200 cursor-pointer"
-                            onClick={() => completeReminder.mutate(reminder.id)}
+                            onClick={() => completeReminder.mutate(reminder.id, {
+                              onSuccess: () => toast.success("Reminder completed!"),
+                              onError: (err) => toast.error(err.message || "Failed to complete reminder")
+                            })}
                             disabled={completeReminder.isPending}
                           >
                             Complete
@@ -230,7 +235,10 @@ export function RemindersPageClient({ profile, agents }: { profile: Profile, age
                             variant="outline"
                             size="sm"
                             className="h-7 text-xs text-red-600 bg-red-50 hover:bg-red-100 border-red-200 cursor-pointer"
-                            onClick={() => cancelReminder.mutate(reminder.id)}
+                            onClick={() => cancelReminder.mutate(reminder.id, {
+                              onSuccess: () => toast.success("Reminder cancelled!"),
+                              onError: (err) => toast.error(err.message || "Failed to cancel reminder")
+                            })}
                             disabled={cancelReminder.isPending}
                           >
                             Cancel

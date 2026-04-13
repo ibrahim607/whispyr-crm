@@ -23,6 +23,7 @@ import { useCreateLeadReminder } from "@/lib/tanstack/useReminders";
 import { getApiErrorMessage } from "@/lib/get-api-error-message";
 import { format } from "date-fns";
 import { CalendarIcon, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 function mergeDateAndTime(date: Date, hours: number, minutes: number): Date {
     const d = new Date(date);
@@ -77,6 +78,7 @@ export function CreateReminderDialog({ leadId }: { leadId: string }) {
                 dueAt,
                 leadId,
             });
+            toast.success("Reminder created successfully!");
             resetForm();
             setOpen(false);
         } catch (mutationError) {

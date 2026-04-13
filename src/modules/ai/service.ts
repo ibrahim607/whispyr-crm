@@ -12,7 +12,8 @@ import {
 import { buildLeadBriefPrompt, buildCallFollowupPrompt, validateLeadAccess } from "./helpers";
 import { generateText, Output } from "ai";
 import { LeadBrief, leadBriefSchema, callFollowUpSchema } from "./schema";
-import { buildAiLeadBriefGeneratedActivity, createActivities, CallOutcome } from "../activity";
+import { ActivityService, CallOutcome } from "../activity";
+import { buildAiLeadBriefGeneratedActivity } from "../activity/helpers";
 
 export async function generateLeadBrief(
     leadId: string,
@@ -80,7 +81,7 @@ export async function saveLeadBrief(
 
         // Create an activity
         const activity = buildAiLeadBriefGeneratedActivity(leadId, userSnapshot.id);
-        await createActivities([activity], tx);
+        await ActivityService.create([activity], tx);
 
         return savedBrief;
     });

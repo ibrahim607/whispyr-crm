@@ -5,6 +5,7 @@ import { UserActions } from "./UserActions"
 import { Pagination } from "../leads/reusable"
 import { PaginationMeta } from "@/utils/pagination"
 import { Dispatch, SetStateAction } from "react"
+import { Spinner } from "@/components/ui/spinner"
 
 // Color mapping for role badges.
 // These use Tailwind's default color palette.
@@ -23,6 +24,10 @@ interface UsersTableProps {
 }
 
 const UsersTable = ({ users, pagination, page, setPage, isLoading }: UsersTableProps) => {
+    if (isLoading) {
+        return <div className="rounded-md border p-8 flex justify-center"><Spinner /></div>
+    }
+
     if (!isLoading && users.length === 0) {
         return <div className="rounded-md border p-8 text-center text-muted-foreground">
             No users yet. Create one to get started.

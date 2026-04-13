@@ -5,6 +5,7 @@ import { useEditLead } from '@/lib/tanstack/useLeads'
 import { Loader2 } from 'lucide-react'
 import { editLeadSchema } from '@/modules/leads/schema'
 import { z } from 'zod'
+import { toast } from 'sonner'
 
 interface LeadDescriptionProps {
     leadId: string
@@ -48,7 +49,11 @@ export default function LeadDescription({ leadId, name: initialName, email: init
         setErrors({})
         updateLead({ name, email, phone }, {
             onSuccess: () => {
+                toast.success("Lead details updated successfully!")
                 onSuccess?.()
+            },
+            onError: (error) => {
+                toast.error(error.message || "Failed to update lead details")
             }
         })
     }

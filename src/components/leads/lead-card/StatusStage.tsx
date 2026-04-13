@@ -4,12 +4,13 @@ import React, { useState } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select'
 import { useEditLead } from '@/lib/tanstack/useLeads';
 import { LeadStage, LeadStatus } from '@/generated/prisma/enums';
+import { toast } from 'sonner';
 
 export default function StatusStage({ leadId, status, stage, role }: { leadId: string, status: string, stage: string, role: string }) {
 
     const [currentStatus, setCurrentStatus] = useState(status)
     const [currentStage, setCurrentStage] = useState(stage)
-    const { mutateAsync: updateLead } = useEditLead(leadId);
+    const { mutateAsync: updateLead, isPending } = useEditLead(leadId);
     const isAdminOrManager = role === "ADMIN" || role === "MANAGER";
 
     const getStatusColor = (s: string) => {
@@ -42,12 +43,22 @@ export default function StatusStage({ leadId, status, stage, role }: { leadId: s
 
     const handleStatusChange = async (val: string) => {
         setCurrentStatus(val);
-        await updateLead({ status: val as LeadStatus });
+        try {
+            await updateLead({ status: val as LeadStatus });
+            toast.success("Lead status updated!")
+        } catch (error: any) {
+            toast.error(error?.message || "Failed to update status")
+        }
     }
 
     const handleStageChange = async (val: string) => {
         setCurrentStage(val);
-        await updateLead({ stage: val as LeadStage });
+        try {
+            await updateLead({ stage: val as LeadStage });
+            toast.success("Lead stage updated!")
+        } catch (error: any) {
+            toast.error(error?.message || "Failed to update stage")
+        }
     }
 
     return (
@@ -56,7 +67,7 @@ export default function StatusStage({ leadId, status, stage, role }: { leadId: s
             <div className='flex flex-col gap-6'>
                 <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium text-gray-700">Status</label>
-                    <Select defaultValue={status} onValueChange={handleStatusChange} disabled={!isAdminOrManager}>
+                    <Select defaultValue={status} onValueChange={handleStatusChange} disabled={!isAdminOrManager || isPending}>
                         <SelectTrigger className={getStatusColor(currentStatus)}>
                             <SelectValue placeholder="Select a status" />
                         </SelectTrigger>
@@ -69,7 +80,7 @@ export default function StatusStage({ leadId, status, stage, role }: { leadId: s
                 </div>
                 <div className="flex flex-col gap-2">
                     <label className="text-sm font-medium text-gray-700">Stage</label>
-                    <Select defaultValue={stage} onValueChange={handleStageChange} disabled={!isAdminOrManager}>
+                    <Select defaultValue={stage} onValueChange={handleStageChange} disabled={!isAdminOrManager || isPending}>
                         <SelectTrigger className={getStageColor(currentStage)}>
                             <SelectValue placeholder="Select a stage" />
                         </SelectTrigger>

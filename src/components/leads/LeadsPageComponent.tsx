@@ -87,6 +87,13 @@ export default function LeadsPageComponent({ role }: { role: Role }) {
                                     </TableRow>
                                 )
                             })}
+                            {!data?.leads?.length && (
+                                <TableRow>
+                                    <TableCell colSpan={isManagerOrAdmin ? 7 : 6} className='text-center p-8 text-muted-foreground'>
+                                        No leads found. Create one to get started!
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 </div>

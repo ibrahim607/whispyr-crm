@@ -1,9 +1,11 @@
-const CrmPage = () => {
-    return (
-        <div>
-            <h1>Crm</h1>
-        </div>
-    );
-};
+import { authenticateUser } from "@/utils/autheticateUser";
+import { DashboardPageClient } from "@/components/dashboard/Dashboard-page-client";
 
-export default CrmPage;
+const DashboardPage = async () => {
+    const profile = await authenticateUser();
+
+    return <DashboardPageClient role={profile.role} />;
+
+}
+
+export default DashboardPage;

@@ -55,7 +55,7 @@ export default function LeadInfoClient({ id, profile, agents }: LeadInfoClientPr
             case 'activities': return <ActivitiesTab leadId={id} />;
             case 'reminders': return <RemindersTab leadId={id} />;
             case 'ai': return <AI leadId={id} />;
-            case 'files': return <FilesTab />;
+            case 'files': return <FilesTab leadId={id} />;
             default: return <OverviewTab lead={lead as any} role={role} agents={agents} />;
         }
     }
