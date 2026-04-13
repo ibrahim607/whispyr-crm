@@ -40,7 +40,7 @@ export default function AccountAvatarSection({
 
     function handleAgentChange(agentId: string) {
         editLead(
-            { assignedToId: agentId === "unassign" ? null : agentId },
+            { assignedToId: agentId === "unassign" ? undefined : agentId },
             {
                 onSuccess: () => toast.success("Agent reassigned successfully!"),
                 onError: (err) => toast.error(err.message || "Failed to reassign agent"),
