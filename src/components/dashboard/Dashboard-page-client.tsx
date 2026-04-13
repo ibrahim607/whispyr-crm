@@ -7,6 +7,7 @@ import KpiCard from "./KpiCard";
 import { Role } from "@/generated/prisma/enums";
 import { cn } from "@/lib/utils";
 import ByStageBreakdown from "./ByStageBreakdown";
+import ByStatusBreakdown from "./ByStatusBreakdown";
 import TopAgentsCard from "./TopAgentsCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -118,7 +119,10 @@ export function DashboardPageClient({ role }: { role: Role }) {
             </div>
 
             <div className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3", secondRowGridStyle)}>
-                <ByStageBreakdown data={data.totalLeadsByStage} />
+                <div className="col-span-1 lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <ByStageBreakdown data={data.totalLeadsByStage} />
+                    <ByStatusBreakdown data={data.totalLeadsByStatus} />
+                </div>
                 {data.topAgents ? <TopAgentsCard topAgents={data.topAgents} /> : null}
             </div>
         </div>

@@ -1,23 +1,30 @@
-import { DashboardData } from "@/services/dashboard"
+import { DashboardData } from "@/modules/dashboard"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
-import { BarChart, XAxis, Bar, CartesianGrid } from "recharts"
+import { BarChart, XAxis, Bar, CartesianGrid, Cell } from "recharts"
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart"
+import React from "react"
 
 const ByStageBreakdown = ({ data }: { data: DashboardData["totalLeadsByStage"] }) => {
 
+    const stageColors: Record<string, string> = {
+        NEW: "hsl(217, 91%, 60%)",          // Blue
+        CONTACTED: "hsl(262, 83%, 58%)",    // Violet
+        QUALIFIED: "hsl(142, 71%, 45%)",    // Green
+        NEGOTIATING: "hsl(48, 96%, 53%)",   // Yellow
+    }
+
     const chartConfig = {
-        stage: {
-            label: "Stage",
-            color: "var(--chart-1)",
+        count: {
+            label: "Leads",
         },
     } satisfies ChartConfig
 
     return (
-        <Card className="col-span-1 lg:col-span-2">
+        <Card className="col-span-1 ">
             <CardHeader>
                 <CardTitle>Leads by Stage</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="mt-15">
                 <ChartContainer config={chartConfig}>
                     <BarChart accessibilityLayer data={data}>
                         <CartesianGrid vertical={false} />
@@ -31,11 +38,15 @@ const ByStageBreakdown = ({ data }: { data: DashboardData["totalLeadsByStage"] }
                             cursor={false}
                             content={<ChartTooltipContent hideLabel />}
                         />
-                        <Bar dataKey="count" fill="var(--chart-1)" radius={8} />
+                        <Bar dataKey="count" radius={8}>
+                            {data.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={stageColors[entry.stage] || "hsl(var(--muted))"} />
+                            ))}
+                        </Bar>
                     </BarChart>
                 </ChartContainer>
             </CardContent>
-        </Card>
+        </Card >
     )
 }
 export default ByStageBreakdown

@@ -1,6 +1,6 @@
 import { authenticateUser } from "@/utils/autheticateUser";
 import { handleRouteError } from "@/utils/handleRouteErrors";
-import { createCallAttemptSchema, createActivities } from "@/modules/activity";
+import { ActivityService, ActivitySchema } from "@/modules/activity";
 import { ActivityType } from "@/generated/prisma/enums";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -13,13 +13,13 @@ export async function POST(
         const { id: leadId } = await params;
 
         const body = await request.json();
-        const validated = createCallAttemptSchema.parse(body);
+        const validated = ActivitySchema.createCallAttempt.parse(body);
 
         const content = validated.notes
             ? `${validated.outcome} — ${validated.notes}`
             : validated.outcome;
 
-        const result = await createActivities([{
+        const result = await ActivityService.create([{
             leadId,
             actorId: profile.id,
             type: ActivityType.CALL_ATTEMPT,
