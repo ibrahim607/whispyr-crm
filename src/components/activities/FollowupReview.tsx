@@ -5,6 +5,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { useCreateLeadReminder } from "@/lib/tanstack/useReminders";
 import { CallFollowUp } from "@/modules/ai/schema";
+import { toast } from "sonner";
 
 interface FollowupReviewProps {
     followUpData: CallFollowUp;
@@ -29,7 +30,11 @@ export function FollowupReview({
             },
             {
                 onSuccess: () => {
+                    toast.success("Reminder created from AI follow-up!");
                     onClose();
+                },
+                onError: (err) => {
+                    toast.error(err.message || "Failed to create reminder");
                 },
             }
         );

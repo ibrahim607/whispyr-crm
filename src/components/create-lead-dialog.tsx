@@ -151,7 +151,7 @@ export function CreateLeadDialog() {
           <div className="space-y-2">
             <Label htmlFor="agent">Assign Agent (Optional)</Label>
             <Select
-              value={assignedToId}
+              value={assignedToId || "none"}
               onValueChange={(value) => setAssignedToId(value === "none" ? "" : value)}
             >
               <SelectTrigger id="agent" disabled={createLead.isPending || isLoadingAgents}>

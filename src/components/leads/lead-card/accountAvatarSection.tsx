@@ -11,6 +11,7 @@ import {
 } from '../../ui/select';
 import { useEditLead } from '@/lib/tanstack/useLeads';
 import { AgentSummary } from '@/components/leads/lead-card/LeadInfoClient';
+import { toast } from 'sonner';
 
 interface AccountAvatarSectionProps {
     leadId: string;
@@ -38,7 +39,13 @@ export default function AccountAvatarSection({
     const { mutate: editLead, isPending } = useEditLead(leadId);
 
     function handleAgentChange(agentId: string) {
-        editLead({ assignedToId: agentId === "unassign" ? null : agentId });
+        editLead(
+            { assignedToId: agentId === "unassign" ? null : agentId },
+            {
+                onSuccess: () => toast.success("Agent reassigned successfully!"),
+                onError: (err) => toast.error(err.message || "Failed to reassign agent"),
+            }
+        );
     }
 
     return (

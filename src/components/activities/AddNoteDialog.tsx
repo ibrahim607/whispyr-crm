@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAddNote } from "@/lib/tanstack/useActivities";
+import { toast } from "sonner";
 
 interface AddNoteDialogProps {
     leadId: string;
@@ -43,8 +44,12 @@ export default function AddNoteDialog({
             { content: trimmed },
             {
                 onSuccess: () => {
+                    toast.success("Note added!");
                     setContent("");
                     onOpenChange(false);
+                },
+                onError: (err) => {
+                    toast.error(err.message || "Failed to add note");
                 },
             },
         );

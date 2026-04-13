@@ -10,6 +10,7 @@ import {
 import { UpdateUserSchema } from "@/modules/admin/schema";
 import { useState } from "react";
 import { toast } from "sonner";
+import { getApiErrorMessage } from "@/lib/get-api-error-message";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -82,8 +83,8 @@ export function UserActions({ user }: { user: User }) {
                 toast.success("User updated successfully.");
                 setShowEditDialog(false);
             },
-            onError: () => {
-                toast.error("Failed to update user.");
+            onError: (err) => {
+                toast.error(getApiErrorMessage(err, "Failed to update user."));
             },
         });
     }
@@ -99,8 +100,8 @@ export function UserActions({ user }: { user: User }) {
                 toast.success("User deactivated successfully.");
                 setShowActivationDialog(false);
             },
-            onError: () => {
-                toast.error("Failed to deactivate user.");
+            onError: (err) => {
+                toast.error(getApiErrorMessage(err, "Failed to deactivate user."));
             },
         });
     }
@@ -116,8 +117,8 @@ export function UserActions({ user }: { user: User }) {
                 toast.success("User reactivated successfully.");
                 setShowActivationDialog(false);
             },
-            onError: () => {
-                toast.error("Failed to reactivate user.");
+            onError: (err) => {
+                toast.error(getApiErrorMessage(err, "Failed to reactivate user."));
             },
         });
     }
@@ -127,8 +128,8 @@ export function UserActions({ user }: { user: User }) {
             onSuccess: () => {
                 toast.success(`Invite re-sent to ${user.email}.`);
             },
-            onError: () => {
-                toast.error("Failed to resend invite.");
+            onError: (err) => {
+                toast.error(getApiErrorMessage(err, "Failed to resend invite."));
             },
         });
     }

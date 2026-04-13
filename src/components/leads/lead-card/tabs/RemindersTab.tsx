@@ -5,6 +5,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
 
 function getReminderDisplayStatus(status: string, dueAt: string | Date) {
     if (status === "FIRED") return "completed"
@@ -86,7 +87,10 @@ export default function RemindersTab({ leadId }: { leadId: string }) {
                                 <>
                                     <Button
                                         size="sm"
-                                        onClick={() => cancelReminder.mutate(reminder.id)}
+                                        onClick={() => cancelReminder.mutate(reminder.id, {
+                                            onSuccess: () => toast.success("Reminder cancelled!"),
+                                            onError: (err) => toast.error(err.message || "Failed to cancel reminder"),
+                                        })}
                                         disabled={cancelReminder.isPending}
                                         className="bg-slate-100/80 text-slate-600 hover:bg-slate-200/80 hover:text-slate-800 shadow-none rounded-lg px-4 h-8 transition-colors text-xs font-semibold"
                                     >

@@ -34,16 +34,36 @@ export async function listLeads(profile: Profile, params: ListLeadsParams) {
 export async function createLead(profile: Profile, data: CreateLeadRequest) {
   const result = await prisma.$transaction(async (tx) => {
     const lead = await dbCreateLead(profile, data, tx);
-    await ActivityService.create(
-      [
-        {
-          leadId: lead.id,
-          actorId: profile.id,
-          type: ActivityType.LEAD_CREATED,
-        },
-      ],
-      tx,
-    );
+    const activities: any[] = [
+      {
+        leadId: lead.id,
+        actorId: profile.id,
+        type: ActivityType.LEAD_CREATED,
+      },
+    ];
+
+    if (data.assignedToId) {
+      const assignee = await tx.profile.findUnique({ where: { id: data.assignedToId } });
+      activities.push(
+        buildAssignmentActivity(
+          lead.id,
+          profile.id,
+          "Unassigned",
+          assignee?.name ?? "Unknown Agent"
+        )
+      );
+    }
+
+    if (data.note) {
+      activities.push({
+        leadId: lead.id,
+        actorId: profile.id,
+        type: ActivityType.NOTE,
+        content: data.note
+      });
+    }
+
+    await ActivityService.create(activities, tx);
 
     return lead;
   });
@@ -93,29 +113,29 @@ export async function updateLead(
   }
 
   const activities: any[] = [];
-  
+
   activities.push(...buildStatusStageActivities(id, profile.id, existingLead, data));
 
   if (data.assignedToId && data.assignedToId !== existingLead.assignedToId) {
-      // Find the new assignee profile name
-      const newAssignee = await prisma.profile.findUnique({ where: { id: data.assignedToId } });
-      activities.push(
-          buildAssignmentActivity(
-              id,
-              profile.id,
-              existingLead.assignedTo?.name ?? "Unassigned",
-              newAssignee?.name ?? "Unassigned"
-          )
-      );
+    // Find the new assignee profile name
+    const newAssignee = await prisma.profile.findUnique({ where: { id: data.assignedToId } });
+    activities.push(
+      buildAssignmentActivity(
+        id,
+        profile.id,
+        existingLead.assignedTo?.name ?? "Unassigned",
+        newAssignee?.name ?? "Unassigned"
+      )
+    );
   }
 
   // Check if contact fields changed
   if (
-      (data.name && data.name !== existingLead.name) ||
-      (data.email && data.email !== existingLead.email) ||
-      (data.phone && data.phone !== existingLead.phone)
+    (data.name && data.name !== existingLead.name) ||
+    (data.email && data.email !== existingLead.email) ||
+    (data.phone && data.phone !== existingLead.phone)
   ) {
-      activities.push(buildLeadUpdatedActivity(id, profile.id));
+    activities.push(buildLeadUpdatedActivity(id, profile.id));
   }
 
   const result = await prisma.$transaction(async (tx) => {

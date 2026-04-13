@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Sparkles } from "lucide-react";
 import { useLogCallAttempt } from "@/lib/tanstack/useActivities";
 import { useGenerateCallFollowup } from "@/lib/tanstack/useAi";
+import { toast } from "sonner";
 import { CallOutcome } from "@/modules/activity";
 import { CallFollowUp } from "@/modules/ai/schema";
 import { FollowupReview } from "./FollowupReview";
@@ -78,7 +79,11 @@ export default function LogCallDialog({
             { outcome, notes: notes.trim() || undefined },
             {
                 onSuccess: () => {
+                    toast.success("Call logged successfully!");
                     setStep("suggest");
+                },
+                onError: (err) => {
+                    toast.error(err.message || "Failed to log call");
                 },
             },
         );
