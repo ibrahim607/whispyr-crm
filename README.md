@@ -16,7 +16,9 @@ Use the following credentials to log in and explore the different role-based fea
 | **Admin** | `ibrahimyasin@crm.com` | `admin123` |
 | **Agent** | `agentibrahim@crm.com` | `admin123` |
 
-[Live Demo](https://whispyr-crm-vcpk.vercel.app/) ## 📋 Overview
+[Live Demo](https://whispyr-crm-vcpk.vercel.app/) 
+
+## 📋 Overview
 
 CRM Pro is designed with strict role-based access control (RBAC), server-side validation, and a robust service layer. It moves away from standard CRUD operations by implementing real-world enterprise patterns like append-only audit trails, serverless job scheduling, and centralized data access layers.
 
