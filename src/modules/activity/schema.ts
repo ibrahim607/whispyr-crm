@@ -57,7 +57,7 @@ export const getLeadActivitiesSchema = z.object({
 
 export type GetLeadActivitiesRequest = z.infer<typeof getLeadActivitiesSchema>;
 
-interface ActivitySummaryItem {
+export interface ActivitySummaryItem {
   id: string;
   actor: {
     name: string;

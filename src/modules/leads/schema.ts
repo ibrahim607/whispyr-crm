@@ -36,6 +36,11 @@ export const editLeadSchema = z.object({
 
 export type EditLeadRequest = z.infer<typeof editLeadSchema>;
 
+export interface UpdateStatusStageRequest {
+  status?: LeadStatus;
+  stage?: LeadStage;
+}
+
 export interface LeadAssigneeSummary {
   id: string;
   name: string;

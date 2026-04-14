@@ -4,6 +4,7 @@ import { getApiErrorMessage } from "@/lib/get-api-error-message";
 import { useGetLeadActivities } from "@/lib/tanstack/useActivities";
 import { useState } from "react";
 import { ActivityType } from "@/generated/prisma/enums";
+import type { ActivitySummaryItem } from "@/modules/activity";
 import {
     PlusCircle,
     Pencil,
@@ -124,7 +125,7 @@ export const Timeline = ({ leadId }: { leadId: string }) => {
 
     return (
         <div className="space-y-0 px-2 py-4">
-            {activities.map((activity, idx) => {
+            {activities.map((activity: ActivitySummaryItem, idx) => {
                 const Icon = activityIcons[activity.type] || PlusCircle;
                 const label = activityLabels[activity.type] || "Activity";
                 const isLast = idx === activities.length - 1;

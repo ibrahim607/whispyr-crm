@@ -21,4 +21,7 @@ export type {
   CreateActivityRequest,
   CreateCallAttemptRequest,
   CreateNoteRequest,
+  ListLeadActivitiesResponseData,
+  GetLeadActivitiesRequest,
+  ActivitySummaryItem,
 } from "./schema";

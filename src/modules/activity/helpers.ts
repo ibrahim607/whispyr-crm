@@ -1,7 +1,7 @@
 import { ActivityType } from "@/generated/prisma/enums";
 import { Lead } from "@/generated/prisma/client";
-import { UpdateStatusStageRequest } from "../leads/schema";
 import { CreateActivityRequest } from ".";
+import { UpdateStatusStageRequest } from "../leads/schema";
 
 // ── Content builder (used internally & for display) ──────────────────────────
 
@@ -26,8 +26,6 @@ export function buildActivityContent(
       return `Stage changed from ${meta?.from} to ${meta?.to}`;
     case ActivityType.ASSIGNMENT_CHANGE:
       return `Assignment changed from ${meta?.from} to ${meta?.to}`;
-    case ActivityType.LEAD_UPDATED:
-      return "Lead information updated";
     case ActivityType.NOTE:
       return null; // content is stored directly on the activity
     case ActivityType.LEAD_CREATED:
@@ -44,13 +42,6 @@ export function buildLeadCreatedActivity(
   actorId: string,
 ): CreateActivityRequest {
   return { leadId, actorId, type: ActivityType.LEAD_CREATED };
-}
-
-export function buildLeadUpdatedActivity(
-  leadId: string,
-  actorId: string,
-): CreateActivityRequest {
-  return { leadId, actorId, type: ActivityType.LEAD_UPDATED };
 }
 
 export function buildNoteActivity(

@@ -4,7 +4,7 @@ import { dbBulkDeleteLeads, dbBulkReassignLeads, dbBulkUpdateLeads, dbCreateLead
 import { canEditLeadAssignment, canEditLeadContactFields } from "./permissions";
 import { ActivityService } from "../activity";
 import { prisma } from "@/lib/prisma";
-import { buildAssignmentActivity, buildStatusStageActivities, buildLeadUpdatedActivity } from "../activity/helpers";
+import { buildAssignmentActivity, buildStatusStageActivities } from "../activity/helpers";
 
 export class LeadServiceError extends Error {
   constructor(
@@ -129,14 +129,6 @@ export async function updateLead(
     );
   }
 
-  // Check if contact fields changed
-  if (
-    (data.name && data.name !== existingLead.name) ||
-    (data.email && data.email !== existingLead.email) ||
-    (data.phone && data.phone !== existingLead.phone)
-  ) {
-    activities.push(buildLeadUpdatedActivity(id, profile.id));
-  }
 
   const result = await prisma.$transaction(async (tx) => {
     const updatedLead = await dbUpdateLead(id, data, tx);
